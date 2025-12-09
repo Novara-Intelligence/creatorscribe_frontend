@@ -24,7 +24,7 @@ const DESCRIPTION_LENGTHS = [
 
 export function DescriptionSelector({ value, onValueChange }: DescriptionSelectorProps) {
   const selectedDescription = DESCRIPTION_LENGTHS.find(desc => desc.value === value);
-  const displayText = selectedDescription ? selectedDescription.label : "Select Description";
+  const displayText = selectedDescription ? selectedDescription.label : "Description length";
   
   const [isMdOrLarger, setIsMdOrLarger] = useState(false);
 

@@ -78,11 +78,11 @@ export function ClientSwitcher() {
               >
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage
-                    src={getImageUrl(activeClient.brand_logo) || ""}
+                    src={getImageUrl(activeClient.brand_logo)}
                     alt={activeClient.client_name}
                     className="object-cover"
                   />
-                  <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
+                  <AvatarFallback className="rounded-lg bg-primary text-primary-foreground font-semibold">
                     {activeClient.client_name
                       .split(" ")
                       .map((n) => n[0])
@@ -119,11 +119,11 @@ export function ClientSwitcher() {
                 >
                   <Avatar className="h-6 w-6 rounded-md">
                     <AvatarImage
-                      src={getImageUrl(client.brand_logo) || ""}
+                      src={getImageUrl(client.brand_logo)}
                       alt={client.client_name}
                       className="object-cover"
                     />
-                    <AvatarFallback className="rounded-md text-xs">
+                    <AvatarFallback className="rounded-md text-xs bg-primary text-primary-foreground font-semibold">
                       {client.client_name
                         .split(" ")
                         .map((n) => n[0])

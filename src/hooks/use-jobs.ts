@@ -37,20 +37,28 @@ export function useJobs({ clientId, pollingInterval = 10000 }: UseJobsOptions): 
       });
 
       if (response.success !== false) {
-        // Incremental update: merge new/updated jobs with existing ones
-        setJobs(prevJobs => {
-          const existingJobsMap = new Map(prevJobs.map(job => [job.job_id, job]));
-
-          // Update existing jobs or add new ones
-          response.jobs.forEach(newJob => {
-            existingJobsMap.set(newJob.job_id, newJob);
-          });
-
-          // Convert back to array and sort by created_at (newest first)
-          return Array.from(existingJobsMap.values()).sort(
+        if (showLoading) {
+          // Full replacement when explicitly fetching (client change or manual refetch)
+          const sortedJobs = response.jobs.sort(
             (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
           );
-        });
+          setJobs(sortedJobs);
+        } else {
+          // Incremental update for polling (merge new/updated jobs with existing ones)
+          setJobs(prevJobs => {
+            const existingJobsMap = new Map(prevJobs.map(job => [job.job_id, job]));
+
+            // Update existing jobs or add new ones
+            response.jobs.forEach(newJob => {
+              existingJobsMap.set(newJob.job_id, newJob);
+            });
+
+            // Convert back to array and sort by created_at (newest first)
+            return Array.from(existingJobsMap.values()).sort(
+              (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            );
+          });
+        }
       } else {
         if (showLoading) {
           setError(response.message || "Failed to load jobs");
@@ -83,7 +91,14 @@ export function useJobs({ clientId, pollingInterval = 10000 }: UseJobsOptions): 
   // Initial fetch when client changes
   useEffect(() => {
     if (clientId) {
+      // Clear existing jobs when switching clients
+      setJobs([]);
+      setError(null);
       fetchJobs(true);
+    } else {
+      // Clear jobs when no client is selected
+      setJobs([]);
+      setError(null);
     }
   }, [clientId, fetchJobs]);
 

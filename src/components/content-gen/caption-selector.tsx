@@ -24,7 +24,7 @@ const CAPTION_LENGTHS = [
 
 export function CaptionSelector({ value, onValueChange }: CaptionSelectorProps) {
   const selectedCaption = CAPTION_LENGTHS.find(caption => caption.value === value);
-  const displayText = selectedCaption ? selectedCaption.label : "Select Caption";
+  const displayText = selectedCaption ? selectedCaption.label : "Caption length";
   
   const [isMdOrLarger, setIsMdOrLarger] = useState(false);
 

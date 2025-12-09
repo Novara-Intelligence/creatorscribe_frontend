@@ -62,7 +62,7 @@ export function NavMain({
                   <SidebarMenuButton
                     tooltip={item.title}
                     size="lg"
-                    className="space-x-4 group-data-[collapsible=icon]:!h-12 group-data-[collapsible=icon]:!w-12 group-data-[collapsible=icon]:!p-3.5"
+                    className="space-x-2 group-data-[collapsible=icon]:!h-12 group-data-[collapsible=icon]:!w-12 group-data-[collapsible=icon]:!p-3.5"
                     isActive={isParentActive}
                   >
                     {item.icon && <item.icon className="h-5! w-5!" />}
@@ -95,7 +95,7 @@ export function NavMain({
               key={item.title}
               tooltip={item.title}
               size="lg"
-              className="space-x-4 group-data-[collapsible=icon]:!h-12 group-data-[collapsible=icon]:!w-12 group-data-[collapsible=icon]:!p-3.5"
+              className="space-x-2 group-data-[collapsible=icon]:!h-12 group-data-[collapsible=icon]:!w-12 group-data-[collapsible=icon]:!p-3.5"
               isActive={isParentActive}
               onClick={() => router.push(item.url)}
             >
