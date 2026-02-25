@@ -9,69 +9,9 @@ import {
 } from "@/components/ui/input-group";
 import { EyeIcon, EyeOffIcon, LockIcon, MailIcon, UserIcon } from "lucide-react";
 import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [agreeToTerms, setAgreeToTerms] = useState(false);
-  const router = useRouter();
-
-  const handleGoogleSignUp = async () => {
-    setIsLoading(true);
-    setError("");
-    try {
-      await signIn("google", { callbackUrl: "/dashboard" });
-    } catch (error) {
-      setError("Failed to sign up with Google");
-      setIsLoading(false);
-    }
-  };
-
-  const handleFacebookSignUp = async () => {
-    setIsLoading(true);
-    setError("");
-    try {
-      await signIn("facebook", { callbackUrl: "/dashboard" });
-    } catch (error) {
-      setError("Failed to sign up with Facebook");
-      setIsLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!agreeToTerms) {
-      setError("Please agree to the terms & conditions");
-      return;
-    }
-
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const AuthService = (await import("@/lib/auth")).default;
-      
-      await AuthService.register({
-        full_name: fullName,
-        email,
-        password,
-        phone_number: "",
-      });
-
-      router.push(`/verify-otp?email=${encodeURIComponent(email)}&type=registration`);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An error occurred during sign up";
-      setError(errorMessage);
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="mx-auto flex h-screen w-full">
@@ -96,8 +36,6 @@ export default function SignUp() {
               variant="outline" 
               size="lg" 
               className="flex-1 py-6!"
-              onClick={handleGoogleSignUp}
-              disabled={isLoading}
               type="button"
             >
               <Image
@@ -112,8 +50,6 @@ export default function SignUp() {
               variant="outline" 
               size="lg" 
               className="flex-1 py-6!"
-              onClick={handleFacebookSignUp}
-              disabled={isLoading}
               type="button"
             >
               <Image
@@ -132,19 +68,11 @@ export default function SignUp() {
             </p>
             <div className="h-px flex-1 bg-gray-300"></div>
           </div>
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            {error && (
-              <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-md">
-                {error}
-              </div>
-            )}
+          <form className="space-y-4">
             <InputGroup className="py-5!">
               <InputGroupInput 
                 type="text" 
-                placeholder="Full Name" 
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
+                placeholder="Full Name"
               />
               <InputGroupAddon className="mx-2">
                 <UserIcon className="size-5!" />
@@ -153,10 +81,7 @@ export default function SignUp() {
             <InputGroup className="py-5!">
               <InputGroupInput 
                 type="email" 
-                placeholder="Email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                placeholder="Email"
               />
               <InputGroupAddon className="mx-2">
                 <MailIcon className="size-5!" />
@@ -166,9 +91,6 @@ export default function SignUp() {
               <InputGroupInput
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
               />
               <InputGroupAddon className="mx-2">
                 <LockIcon className="size-5!" />
@@ -188,9 +110,7 @@ export default function SignUp() {
               <label className="flex items-center gap-2 text-sm cursor-pointer">
                 <input 
                   type="checkbox" 
-                  className="size-4 cursor-pointer" 
-                  checked={agreeToTerms}
-                  onChange={(e) => setAgreeToTerms(e.target.checked)}
+                  className="size-4 cursor-pointer"
                 />
                 <span>I agree to the terms & conditions</span>
               </label>
@@ -198,9 +118,8 @@ export default function SignUp() {
             <Button 
               type="submit"
               className="w-full py-6! mt-6 cursor-pointer"
-              disabled={isLoading}
             >
-              {isLoading ? "Creating account..." : "Sign Up"}
+              Sign Up
             </Button>
           </form>
           <p className="text-sm text-center">

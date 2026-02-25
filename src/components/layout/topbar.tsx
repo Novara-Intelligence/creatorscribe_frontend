@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import {
   Bell,
   User,
@@ -11,7 +10,7 @@ import {
   UserCog,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ModeToggle } from "@/components/theme/theme-toggle";
 import {
   DropdownMenu,
@@ -21,13 +20,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useTheme } from "next-themes";
 import { SidebarTrigger, useSidebar } from "../ui/sidebar";
 import Image from "next/image";
-import { signOut } from "next-auth/react";
 
 export function Topbar() {
-  const router = useRouter();
   const [mounted, setMounted] = React.useState(false);
   const { isMobile } = useSidebar();
 
@@ -35,10 +31,6 @@ export function Topbar() {
   React.useEffect(() => {
     setMounted(true);
   }, []);
-
-  const handleSignOut = async () => {
-    await signOut({ callbackUrl: "/signin" });
-  };
 
   return (
     <header className="z-50 w-full border-b bg-background">
@@ -86,7 +78,6 @@ export function Topbar() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder-avatar.jpg" alt="Profile" />
                   <AvatarFallback>
                     <User className="h-6 w-6" />
                   </AvatarFallback>
@@ -104,7 +95,7 @@ export function Topbar() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="my-2" />
-              <DropdownMenuItem className="px-3 py-3" onClick={() => router.push("/clients")}>
+              <DropdownMenuItem className="px-3 py-3">
                 <UserCog className="mr-3 h-4 w-4" />
                 <span>Client</span>
               </DropdownMenuItem>
@@ -128,7 +119,6 @@ export function Topbar() {
                 <Button
                   variant="outline"
                   className="w-full justify-center h-auto"
-                  onClick={handleSignOut}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Logout</span>

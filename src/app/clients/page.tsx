@@ -1,9 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import AuthGuard from "@/components/auth/auth-guard";
+import { useState } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
-import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,39 +13,39 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Eye, MoreVertical, Search, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import ClientDialog from "@/components/client_dialog";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useClients } from "@/contexts/client-context";
-import { getImageUrl } from "@/lib/api-services";
 
 export default function Clients() {
-  const { isLoading } = useAuth();
-  const {
-    clients,
-    isLoading: isLoadingClients,
-    error,
-    refreshClients,
-  } = useClients();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Sample data for UI display
+  const clients = [
+    {
+      id: 1,
+      client_name: "Sample Client 1",
+      contact_email: "client1@example.com",
+      brand_logo: null,
+      facebook_url: "https://facebook.com",
+      instagram_url: "https://instagram.com",
+      youtube_url: "https://youtube.com",
+    },
+    {
+      id: 2,
+      client_name: "Sample Client 2",
+      contact_email: "client2@example.com",
+      brand_logo: null,
+      facebook_url: null,
+      instagram_url: null,
+      youtube_url: null,
+    },
+  ];
 
-  // Filter clients based on search query
   const filteredClients = clients.filter((client) =>
     client.client_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
-      </div>
-    );
-  }
-
   return (
     <AppLayout>
-      <AuthGuard requireAuth={true}>
-        <div className="min-h-screen text-black dark:text-white p-4 md:p-6 lg:p-8">
+      <div className="min-h-screen text-black dark:text-white p-4 md:p-6 lg:p-8">
           {/* Header with Search and Add Client button */}
           <div className="flex flex-col gap-4 mb-6 md:flex-row md:justify-between md:items-center">
             <h1 className="text-xl md:text-2xl font-bold text-black dark:text-white">
@@ -65,7 +63,6 @@ export default function Clients() {
                 />
               </div>
               <Button
-                onClick={() => setIsDialogOpen(true)}
                 className="w-full sm:w-auto"
               >
                 Add Client
@@ -73,50 +70,14 @@ export default function Clients() {
             </div>
           </div>
 
-          {/* Client Dialog */}
-          <ClientDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} />
-
           {/* Clients Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {isLoadingClients ? (
-              // Skeleton Loading State
-              Array.from({ length: 9 }).map((_, index) => (
-                <Card key={index} className="p-0">
-                  <CardContent className="p-0">
-                    {/* Row 1: Skeleton */}
-                    <div className="flex items-start justify-between mb-2 p-3 sm:p-4">
-                      <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
-                        <Skeleton className="w-10 h-10 rounded-full flex-shrink-0" />
-                        <div className="min-w-0 flex-1 space-y-2">
-                          <Skeleton className="h-4 w-3/4" />
-                          <Skeleton className="h-3 w-1/2" />
-                        </div>
-                      </div>
-                      <Skeleton className="w-8 h-8 flex-shrink-0" />
-                    </div>
-                    {/* Row 2: Skeleton */}
-                    <div className="flex justify-end gap-1.5 sm:gap-2 border-t p-3 sm:p-4">
-                      <Skeleton className="w-7 h-7 sm:w-8 sm:h-8 rounded-full" />
-                      <Skeleton className="w-7 h-7 sm:w-8 sm:h-8 rounded-full" />
-                      <Skeleton className="w-7 h-7 sm:w-8 sm:h-8 rounded-full" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : error ? (
-              <div className="col-span-full text-center py-12">
-                <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
-                <Button onClick={refreshClients}>Retry</Button>
-              </div>
-            ) : filteredClients.length === 0 ? (
+            {filteredClients.length === 0 ? (
               <div className="col-span-full text-center py-12 text-muted-foreground">
                 {searchQuery ? (
                   <>No clients found matching &quot;{searchQuery}&quot;</>
                 ) : (
-                  <>
-                    No clients found. Click &quot;Add Client&quot; to get
-                    started.
-                  </>
+                  <>No clients found. Click &quot;Add Client&quot; to get started.</>
                 )}
               </div>
             ) : (
@@ -127,11 +88,6 @@ export default function Clients() {
                     <div className="flex items-start justify-between mb-2 p-3 sm:p-4">
                       <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
                         <Avatar className="flex-shrink-0 h-12 w-12 rounded-md">
-                          <AvatarImage
-                            src={getImageUrl(client.brand_logo) || ""}
-                            alt={client.client_name}
-                            className="object-cover"
-                          />
                           <AvatarFallback className="bg-primary rounded-md text-lg font-semibold">
                             {client.client_name
                               .split(" ")
@@ -258,7 +214,6 @@ export default function Clients() {
             )}
           </div>
         </div>
-      </AuthGuard>
     </AppLayout>
   );
 }

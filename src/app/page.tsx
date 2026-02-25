@@ -1,11 +1,7 @@
-"use client";
-import AuthGuard from "@/components/auth/auth-guard";
-import ClientDialog from "@/components/client_dialog";
-
 export default function Home() {
   return (
-    <AuthGuard requireAuth={true}>
-      <div></div>
-    </AuthGuard>
+    <div className="min-h-screen flex items-center justify-center">
+      <h1 className="text-2xl font-bold">Welcome to CreatorScribe</h1>
+    </div>
   );
 }

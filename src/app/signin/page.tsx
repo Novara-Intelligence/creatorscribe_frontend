@@ -9,62 +9,9 @@ import {
 } from "@/components/ui/input-group";
 import { EyeIcon, EyeOffIcon, LockIcon, MailIcon } from "lucide-react";
 import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const router = useRouter();
-
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    setError("");
-    try {
-      await signIn("google", { callbackUrl: "/dashboard" });
-    } catch (error) {
-      setError("Failed to sign in with Google");
-      setIsLoading(false);
-    }
-  };
-
-  const handleFacebookSignIn = async () => {
-    setIsLoading(true);
-    setError("");
-    try {
-      await signIn("facebook", { callbackUrl: "/dashboard" });
-    } catch (error) {
-      setError("Failed to sign in with Facebook");
-      setIsLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-
-    try {
-      // Import AuthService
-      const AuthService = (await import("@/lib/auth")).default;
-      
-      // Call backend API to initiate sign-in (sends OTP)
-      await AuthService.signIn({
-        email,
-        password,
-      });
-
-      // Redirect to verify-otp page with email and type
-      router.push(`/verify-otp?email=${encodeURIComponent(email)}&type=signin`);
-    } catch (err) {
-      const errorMessage = (err as Error)?.message || "An error occurred during sign in";
-      setError(errorMessage);
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="mx-auto flex h-screen w-full">
@@ -89,8 +36,6 @@ export default function SignIn() {
               variant="outline" 
               size="lg" 
               className="flex-1 py-6!"
-              onClick={handleGoogleSignIn}
-              disabled={isLoading}
               type="button"
             >
               <Image
@@ -105,8 +50,6 @@ export default function SignIn() {
               variant="outline" 
               size="lg" 
               className="flex-1 py-6!"
-              onClick={handleFacebookSignIn}
-              disabled={isLoading}
               type="button"
             >
               <Image
@@ -125,19 +68,11 @@ export default function SignIn() {
             </p>
             <div className="h-px flex-1 bg-gray-300"></div>
           </div>
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            {error && (
-              <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-md">
-                {error}
-              </div>
-            )}
+          <form className="space-y-4">
             <InputGroup className="py-5!">
               <InputGroupInput 
                 type="email" 
-                placeholder="Email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                placeholder="Email"
               />
               <InputGroupAddon className="mx-2">
                 <MailIcon className="size-5!" />
@@ -147,9 +82,6 @@ export default function SignIn() {
               <InputGroupInput
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
               />
               <InputGroupAddon className="mx-2">
                 <LockIcon className="size-5!" />
@@ -180,9 +112,8 @@ export default function SignIn() {
             <Button 
               type="submit"
               className="w-full py-6! mt-6 cursor-pointer"
-              disabled={isLoading}
             >
-              {isLoading ? "Signing in..." : "Sign In"}
+              Sign In
             </Button>
           </form>
           <p className="text-sm text-center">
