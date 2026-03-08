@@ -28,7 +28,6 @@ import {
 import { Button } from "../ui/button";
 import { IconCreditCard, IconHelp } from "@tabler/icons-react";
 import { NavSecondary } from "./nav-secondary";
-import { ClientSwitcher } from "./client-switcher";
 
 // Navigation data - active states are now automatically determined based on current pathname
 const data = {
@@ -130,7 +129,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         />
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border ">
-        <ClientSwitcher />
         <p className="text-xs text-muted-foreground text-center group-data-[collapsible=icon]:hidden">
           CreatorScribe &copy; {new Date().getFullYear()}
         </p>
