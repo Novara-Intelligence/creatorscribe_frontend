@@ -1,23 +1,35 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Button, Separator, Field, Input } from "@chakra-ui/react";
+import { Button, Separator, Field, Input, Icon } from "@chakra-ui/react";
+import { MdErrorOutline } from "react-icons/md";
 import { PasswordInput } from "@/components/ui/password-input";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const isSignUp = pathname === "/app/auth/sign-up";
 
   const [password, setPassword] = useState("");
   const [passwordTouched, setPasswordTouched] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
 
   useEffect(() => {
     setPassword("");
     setPasswordTouched(false);
+    setEmail("");
+    setEmailError("");
   }, [isSignUp]);
+
+  const validateEmail = (value: string) => {
+    if (!value) return "Email is required";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "Enter a valid email address";
+    return "";
+  };
 
   const rules = [
     { label: "Minimum 8 characters", valid: password.length >= 8 },
@@ -25,16 +37,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     { label: "At least one special character", valid: /[^a-zA-Z0-9]/.test(password) },
   ];
 
+  const passwordValid = rules.every((r) => r.valid);
+  const isSubmitDisabled =
+    !email || !!validateEmail(email) || !password || (isSignUp ? !passwordValid : false);
+
   return (
-    <div className="flex flex-col min-h-screen">
-
-      {/* Logo */}
-      <div className="flex justify-center gap-3 !py-14">
-        <Image src="/cs_icon.svg" alt="CreatorScribe" width={24} height={24} />
-        <p className="font-raleway !text-lg !font-extrabold">CreatorScribe</p>
-      </div>
-
-      {/* Main form area */}
+    <>
       <div className="flex flex-col items-center justify-center flex-1 p-5">
         <div className="flex flex-col w-full max-w-[360px] gap-4">
 
@@ -75,9 +83,15 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <Separator m={1} />
 
           {/* Form */}
-          <form className="flex flex-col gap-4 mt-2">
-            <Field.Root id="field-email">
-              <Field.Label fontWeight="semibold">Email</Field.Label>
+          <form className="flex flex-col gap-4 mt-2" onSubmit={(e) => {
+            e.preventDefault();
+            if (isSignUp) {
+              sessionStorage.setItem("otp_allowed", "1");
+              router.push("/app/auth/verify-otp");
+            }
+          }}>
+            <Field.Root id="field-email" invalid={!!emailError}>
+              <Field.Label fontWeight="semibold" color={emailError ? "red.500" : undefined}>Email</Field.Label>
               <Input
                 type="email"
                 name="email"
@@ -87,7 +101,17 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 autoComplete="email"
                 borderRadius="xl"
                 fontFamily="var(--font-montserrat)"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (emailError) setEmailError(validateEmail(e.target.value));
+                }}
+                onBlur={(e) => setEmailError(validateEmail(e.target.value))}
               />
+              <Field.ErrorText fontSize="xs" fontWeight="semibold">
+                <Icon as={MdErrorOutline} boxSize={3.5} />
+                {emailError}
+              </Field.ErrorText>
             </Field.Root>
             <Field.Root id="field-password">
               <div className="flex items-center justify-between w-full">
@@ -98,7 +122,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                   opacity: isSignUp ? 0 : 1,
                   whiteSpace: "nowrap",
                 }}>
-                  <Link href="/app/auth/forgot-password" className="!text-xs !font-semibold !text-gray-500 hover:underline underline-offset-2">
+                  <Link href="/app/auth/reset-password" className="!text-xs !font-semibold !text-gray-500 hover:underline underline-offset-2">
                     Forgot your password?
                   </Link>
                 </div>
@@ -132,7 +156,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               </div>
             </Field.Root>
 
-            <Button type="submit" className="!my-1" size="xl" width="full" borderRadius="xl" colorPalette="black">
+            <Button type="submit" className="!my-1" size="xl" width="full" borderRadius="xl" colorPalette="black" disabled={isSubmitDisabled}>
               {isSignUp ? "Sign up" : "Sign in"}
             </Button>
 
@@ -156,6 +180,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         {" "}and{" "}
         <Link href="/privacy" className="!underline decoration-gray-300 hover:text-gray-600">Privacy Policy</Link>.
       </footer>
-    </div>
+    </>
   );
 }
