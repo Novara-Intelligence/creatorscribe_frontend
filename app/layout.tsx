@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Raleway, Montserrat, Poppins, Geist } from "next/font/google";
+import { Raleway, Montserrat, Ubuntu_Mono, Geist } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
@@ -19,10 +19,10 @@ const montserrat = Montserrat({
   weight: ["400", "500", "600", "700"],
 });
 
-const poppins = Poppins({
+const ubuntuMono = Ubuntu_Mono({
   subsets: ["latin"],
-  variable: "--font-poppins",
-  weight: ["400", "500", "600", "700"],
+  variable: "--font-jetbrains",
+  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {
@@ -38,7 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning data-theme="light" className={cn("font-sans", geist.variable)}>
       <body
-        className={`${raleway.variable} ${montserrat.variable} ${poppins.variable} font-raleway antialiased`}
+        className={`${raleway.variable} ${montserrat.variable} ${ubuntuMono.variable} font-raleway antialiased`}
         suppressHydrationWarning
       >
         <TooltipProvider>
