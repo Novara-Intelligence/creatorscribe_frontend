@@ -7,7 +7,6 @@ import { Button, Separator, Field, Input } from "@chakra-ui/react";
 import { PasswordInput } from "@/components/ui/password-input";
 
 export default function SignInPage() {
-  const [isSignUp, setIsSignUp] = useState(false);
   const [password, setPassword] = useState("");
   const [passwordTouched, setPasswordTouched] = useState(false);
 
@@ -18,20 +17,12 @@ export default function SignInPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Fixed logo at top */}
-      <div className="flex justify-center gap-3 !py-14">
-        <Image src="/cs_icon.svg" alt="CreatorScribe" width={24} height={24} />
-        <p className="font-raleway !text-lg !font-extrabold">CreatorScribe</p>
-      </div>
-
-      <div className="flex flex-col items-center justify-center flex-1 p-5">
-        <div className="flex flex-col w-full max-w-[360px]">
+    <div className="flex flex-col w-full max-w-[360px]">
           <div className="flex flex-col gap-4">
             {/* Header */}
             <header className="flex flex-col items-center gap-2 !mb-8">
               <h1 className="font-raleway !text-2xl !font-extrabold transition-all duration-300">
-                {isSignUp ? "Create an account" : "Welcome Back"}
+                Welcome Back
               </h1>
             </header>
 
@@ -55,8 +46,8 @@ export default function SignInPage() {
               <div
                 style={{
                   overflow: "hidden",
-                  maxHeight: isSignUp ? "0px" : "60px",
-                  opacity: isSignUp ? 0 : 1,
+                  maxHeight: "60px",
+                  opacity: 1,
                   transition: "max-height 0.3s ease, opacity 0.3s ease",
                 }}
               >
@@ -82,8 +73,8 @@ export default function SignInPage() {
                   <div
                     style={{
                       overflow: "hidden",
-                      maxWidth: isSignUp ? "0px" : "200px",
-                      opacity: isSignUp ? 0 : 1,
+                      maxWidth: "200px",
+                      opacity: 1,
                       transition: "max-width 0.3s ease, opacity 0.3s ease",
                       whiteSpace: "nowrap",
                     }}
@@ -108,8 +99,8 @@ export default function SignInPage() {
                 <div
                   style={{
                     overflow: "hidden",
-                    maxHeight: isSignUp && passwordTouched ? `${rules.length * 28}px` : "0px",
-                    opacity: isSignUp && passwordTouched ? 1 : 0,
+                    maxHeight: "0px",
+                    opacity: 0,
                     transition: "max-height 0.3s ease, opacity 0.3s ease",
                   }}
                 >
@@ -128,30 +119,17 @@ export default function SignInPage() {
                 </div>
               </Field.Root>
               <Button type="submit" className="!my-1" size="xl" width="full" borderRadius="xl" colorPalette="black">
-                {isSignUp ? "Sign up" : "Sign in"}
+                Sign in
               </Button>
               <p className="!text-sm !text-center">
-                {isSignUp ? "Already have an account? " : "Don't have an account? "}
-                <button
-                  type="button"
-                  onClick={() => { setIsSignUp(!isSignUp); setPasswordTouched(false); setPassword(""); }}
-                  className="!font-semibold !text-black !underline decoration-gray-300 underline-offset-2"
-                >
-                  {isSignUp ? "Sign in" : "Sign up"}
-                </button>
+                Don&apos;t have an account?{" "}
+                <Link href="/app/sign-up" className="!font-semibold !text-black !underline decoration-gray-300 underline-offset-2">
+                  Sign up
+                </Link>
               </p>
             </form>
           </div>
 
-        </div>
-      </div>
-
-      <footer className={`w-full !py-6 !px-8 text-center !text-sm !font-semibold text-gray-500 bg-gray-50 transition-all duration-300 ${isSignUp ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
-        By continuing, you agree to our{" "}
-        <Link href="/terms" className="!underline decoration-gray-300 hover:text-gray-600">Terms of Service</Link>
-        {" "}and{" "}
-        <Link href="/privacy" className="!underline decoration-gray-300 hover:text-gray-600">Privacy Policy</Link>.
-      </footer>
     </div>
   );
 }

@@ -9,6 +9,15 @@ body {
   font-family: var(--font-raleway), sans-serif !important;
 }
 
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.25s ease forwards;
+}
+
 input, textarea {
   font-family: var(--font-montserrat), sans-serif !important;
 }
