@@ -2,8 +2,13 @@
 
 @theme inline {
   --font-raleway: var(--font-raleway);
+  --font-montserrat: var(--font-montserrat);
 }
 
 body {
   font-family: var(--font-raleway), sans-serif !important;
+}
+
+input, textarea {
+  font-family: var(--font-montserrat), sans-serif !important;
 }
