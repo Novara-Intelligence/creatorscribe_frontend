@@ -1,17 +1,15 @@
-"use client";
-
-import { Box, Flex } from "@chakra-ui/react";
-import Sidebar from "./_components/Sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 
 export default function HomeLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Flex height="100vh">
-      <Sidebar />
-
-      {/* Content area */}
-      <Box flex="1" height="100%" overflowY="auto">
-        {children}
-      </Box>
-    </Flex>
+    <SidebarProvider>
+      <AppSidebar />
+      <main className="flex flex-1 flex-col min-h-screen">
+        <div className="flex-1 overflow-y-auto p-4">
+          {children}
+        </div>
+      </main>
+    </SidebarProvider>
   );
 }

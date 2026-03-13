@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Raleway, Montserrat, Poppins, Geist } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -40,7 +41,9 @@ export default function RootLayout({
         className={`${raleway.variable} ${montserrat.variable} ${poppins.variable} font-raleway antialiased`}
         suppressHydrationWarning
       >
-        <ThemeProvider>{children}</ThemeProvider>
+        <TooltipProvider>
+          <ThemeProvider>{children}</ThemeProvider>
+        </TooltipProvider>
       </body>
     </html>
   );
