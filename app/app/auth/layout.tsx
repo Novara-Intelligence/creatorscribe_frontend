@@ -9,7 +9,7 @@ export default function AuthSharedLayout({ children }: { children: React.ReactNo
       {/* Logo — shared across all auth pages */}
       <div className="flex justify-center gap-3 !py-14">
         <Image src="/cs_icon.svg" alt="CreatorScribe" width={24} height={24} />
-        <p className="font-raleway !text-lg !font-extrabold">CreatorScribe</p>
+        <p className="font-poppins !text-lg !font-extrabold">CreatorScribe</p>
       </div>
 
       {/* Page content — children handle their own layout */}

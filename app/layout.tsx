@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
-import { Raleway, Montserrat } from "next/font/google";
+import { Raleway, Montserrat, Poppins, Geist } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const raleway = Raleway({
   subsets: ["latin"],
@@ -12,6 +15,12 @@ const raleway = Raleway({
 const montserrat = Montserrat({
   subsets: ["latin"],
   variable: "--font-montserrat",
+  weight: ["400", "500", "600", "700"],
+});
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  variable: "--font-poppins",
   weight: ["400", "500", "600", "700"],
 });
 
@@ -26,9 +35,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning data-theme="light">
+    <html lang="en" suppressHydrationWarning data-theme="light" className={cn("font-sans", geist.variable)}>
       <body
-        className={`${raleway.variable} ${montserrat.variable} font-raleway antialiased`}
+        className={`${raleway.variable} ${montserrat.variable} ${poppins.variable} font-raleway antialiased`}
         suppressHydrationWarning
       >
         <ThemeProvider>{children}</ThemeProvider>
