@@ -15,9 +15,9 @@ export function Topbar() {
         <TopbarTitle />
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="xs" px={3} py={2} fontSize="xs" fontWeight="bold" borderRadius="lg">Feedback</Button>
-        <Button variant="outline" size="xs" px={3} py={2} fontSize="xs" fontWeight="bold" borderRadius="lg">Docs</Button>
-        <Button variant="outline" size="xs" px={2} py={2} fontSize="xs" fontWeight="bold" borderRadius="lg"><Folder03Icon strokeWidth={1.8} className="size-4" /></Button>
+        <Button variant="outline" size="xs" px={3} py={2} fontSize="xs" fontWeight="bold" borderRadius="lg" className="!hidden lg:!block">Feedback</Button>
+        <Button variant="outline" size="xs" px={3} py={2} fontSize="xs" fontWeight="bold" borderRadius="lg" className="!hidden lg:!block">Docs</Button>
+        <Button variant="outline" size="xs" px={2} py={2} fontSize="xs" fontWeight="bold" borderRadius="lg" className="!hidden lg:!block"><Folder03Icon strokeWidth={1.8} className="size-4" /></Button>
         <Button variant="outline" size="xs" px={2} py={2} fontSize="xs" fontWeight="bold" borderRadius="lg"><Notification01Icon strokeWidth={1.8} className="size-4" /></Button>
       </div>
     </header>

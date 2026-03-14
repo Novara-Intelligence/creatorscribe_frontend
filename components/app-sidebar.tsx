@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Analytics01Icon, Calendar03Icon, Home04Icon, PuzzleIcon, Tag01Icon } from "hugeicons-react";
+import { Analytics01Icon, Calendar03Icon, HelpSquareIcon, Home04Icon, PuzzleIcon, Tag01Icon } from "hugeicons-react";
 import {
   Sidebar,
   SidebarHeader,
@@ -20,6 +20,16 @@ const navItems = [
   { label: "Content Calendar", icon: Calendar03Icon, href: "/app/home/content-calendar" },
   { label: "Addons", icon: PuzzleIcon, href: "/app/home/addons" },
 ];
+
+const navFooterItems = [{
+  label: "Pricing",
+  icon: Tag01Icon,
+  href: "/app/home/faq",
+}, {
+  label: "FAQ",
+  icon: HelpSquareIcon,
+  href: "/app/home/faq",
+}];
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -48,21 +58,32 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="!px-3 !py-6 !gap-3 group-data-[collapsible=icon]:hidden">
-        <div className="flex flex-col gap-1">
-          <a href="/app/home/faq" className="!px-2 group-data-[collapsible=icon]:!p-2 group-data-[collapsible=icon]:!justify-center data-[active]:!bg-gray-200 !text-gray-600 data-[active]:!text-gray-900">
-            <span className="!font-raleway !mt-0.5 !text-sm !font-semibold leading-none group-data-[collapsible=icon]:hidden">Pricing</span>
-          </a>
-          <a href="/app/home/faq" className="!px-2 group-data-[collapsible=icon]:!p-2 group-data-[collapsible=icon]:!justify-center data-[active]:!bg-gray-200 !text-gray-600 data-[active]:!text-gray-900">
-            <span className="!font-raleway !mt-0.5 !text-sm !font-semibold leading-none group-data-[collapsible=icon]:hidden">FAQ</span>
-          </a>
-        </div>
-        <div className="!rounded-lg !border !py-1 flex items-center justify-between gap-2 bg-[image:repeating-linear-gradient(135deg,white,white_4px,rgba(0,0,0,0.06)_4px,rgba(0,0,0,0.06)_8px)]">
+      <SidebarFooter className="!px-3 !py-6 !gap-1.5">
+        <SidebarMenu className="gap-1.5">
+          {navFooterItems.map((item) => (
+            <SidebarMenuItem key={item.label}>
+              <SidebarMenuButton render={<a href={item.href} />} isActive={pathname === item.href} className="!px-2 !py-4.5 rounded-lg group-data-[collapsible=icon]:!p-2 group-data-[collapsible=icon]:!justify-center data-[active]:!bg-gray-200 !text-gray-600 data-[active]:!text-gray-900">
+                {item.icon && <item.icon className="shrink-0 !size-5" />}
+                <span className="!font-raleway !mt-0.5 !text-sm !font-semibold leading-none group-data-[collapsible=icon]:hidden">{item.label}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+        {/* Upgrade button — full version when expanded */}
+        <div className="!rounded-lg !border !py-1 flex items-center justify-between gap-2 bg-[image:repeating-linear-gradient(135deg,white,white_4px,rgba(0,0,0,0.06)_4px,rgba(0,0,0,0.06)_8px)] group-data-[collapsible=icon]:hidden">
           <button className="flex-1 flex items-center justify-center gap-2 !text-sm !font-semibold">
             <Image src="/icons/ic_zap.svg" alt="Zap" width={18} height={18} />
             Upgrade
           </button>
         </div>
+        {/* Upgrade button — icon only when collapsed */}
+        <SidebarMenu className="hidden group-data-[collapsible=icon]:flex">
+          <SidebarMenuItem>
+            <SidebarMenuButton render={<a href="/app/home/upgrade" />} className="!p-2 !justify-center !text-gray-600">
+              <Image src="/icons/ic_zap.svg" alt="Upgrade" width={18} height={18} />
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );
