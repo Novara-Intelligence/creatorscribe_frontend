@@ -4,9 +4,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Button, Separator, Field, Input, Icon } from "@chakra-ui/react";
 import { MdErrorOutline } from "react-icons/md";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { PasswordInput } from "@/components/ui/password-input";
+import { cn } from "@/lib/utils";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -47,23 +50,23 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="flex flex-col w-full max-w-[360px] gap-4">
 
           {/* Title */}
-          <header className="flex flex-col items-center !mb-8">
-            <h1 className="font-raleway !text-2xl !font-extrabold transition-all duration-300">
+          <header className="flex flex-col items-center mb-8">
+            <h1 className="font-raleway text-2xl font-extrabold transition-all duration-300">
               {isSignUp ? "Create an account" : "Welcome Back"}
             </h1>
           </header>
 
           {/* Social buttons */}
           <div className="flex flex-col gap-3 w-full">
-            <Button variant="outline" className="!flex !justify-between !text-sm !font-semibold" size="xl" width="full" borderRadius="xl">
+            <Button variant="outline" size="xl" className="w-full justify-between">
               <Image src="/icons/ic_google.svg" alt="Google" width={22} height={22} />
               <p>{isSignUp ? "Sign up" : "Sign in"} with Google</p>
-              <div></div>
+              <div />
             </Button>
-            <Button variant="outline" className="!flex !justify-between !text-sm !font-semibold" size="xl" width="full" borderRadius="xl">
+            <Button variant="outline" size="xl" className="w-full justify-between">
               <Image src="/icons/ic_facebook.svg" alt="Facebook" width={22} height={22} />
               <p>{isSignUp ? "Sign up" : "Sign in"} with Facebook</p>
-              <div></div>
+              <div />
             </Button>
             {/* Apple — hidden on sign up */}
             <div style={{
@@ -72,15 +75,15 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               opacity: isSignUp ? 0 : 1,
               transition: "max-height 0.35s ease, opacity 0.35s ease",
             }}>
-              <Button variant="outline" className="!flex !justify-between !text-sm !font-semibold" size="xl" width="full" borderRadius="xl">
+              <Button variant="outline" size="xl" className="w-full justify-between">
                 <Image src="/icons/ic_apple.svg" alt="Apple" width={22} height={22} />
                 <p>Sign in with Apple</p>
-                <div></div>
+                <div />
               </Button>
             </div>
           </div>
 
-          <Separator m={1} />
+          <Separator className="my-1" />
 
           {/* Form */}
           <form className="flex flex-col gap-4 mt-2" onSubmit={(e) => {
@@ -90,53 +93,58 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               router.push("/app/auth/verify-otp");
             }
           }}>
-            <Field.Root id="field-email" invalid={!!emailError}>
-              <Field.Label fontWeight="semibold" color={emailError ? "red.500" : undefined}>Email</Field.Label>
+            {/* Email field */}
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="field-email"
+                className={cn("text-sm font-semibold", emailError && "text-red-500")}
+              >
+                Email
+              </label>
               <Input
+                id="field-email"
                 type="email"
                 name="email"
-                size="xl"
-                fontSize="sm"
-                fontWeight="medium"
                 autoComplete="email"
-                borderRadius="xl"
-                fontFamily="var(--font-montserrat)"
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
                   if (emailError) setEmailError(validateEmail(e.target.value));
                 }}
                 onBlur={(e) => setEmailError(validateEmail(e.target.value))}
+                aria-invalid={!!emailError}
+                className="h-11 rounded-xl text-sm font-medium font-montserrat"
               />
-              <Field.ErrorText fontSize="xs" fontWeight="semibold">
-                <Icon as={MdErrorOutline} boxSize={3.5} />
-                {emailError}
-              </Field.ErrorText>
-            </Field.Root>
-            <Field.Root id="field-password">
+              {emailError && (
+                <p className="flex items-center gap-1 text-xs font-semibold text-red-500">
+                  <MdErrorOutline className="size-3.5 shrink-0" />
+                  {emailError}
+                </p>
+              )}
+            </div>
+
+            {/* Password field */}
+            <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between w-full">
-                <Field.Label fontWeight="semibold">Password</Field.Label>
+                <label htmlFor="field-password" className="text-sm font-semibold">Password</label>
                 <div style={{
                   overflow: "hidden",
                   maxWidth: isSignUp ? "0px" : "200px",
                   opacity: isSignUp ? 0 : 1,
                   whiteSpace: "nowrap",
                 }}>
-                  <Link href="/app/auth/reset-password" className="!text-xs !font-semibold !text-gray-500 hover:underline underline-offset-2">
+                  <Link href="/app/auth/reset-password" className="text-xs font-semibold text-gray-500 hover:underline underline-offset-2">
                     Forgot your password?
                   </Link>
                 </div>
               </div>
               <PasswordInput
+                id="field-password"
                 name="password"
-                size="xl"
-                fontSize="sm"
-                fontWeight="medium"
                 autoComplete={isSignUp ? "new-password" : "current-password"}
-                borderRadius="xl"
-                fontFamily="var(--font-montserrat)"
                 onFocus={() => setPasswordTouched(true)}
                 onChange={(e) => setPassword(e.target.value)}
+                className="h-11 rounded-xl text-sm font-medium font-montserrat"
               />
               {/* Password rules — sign up only */}
               <div style={{
@@ -147,24 +155,24 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               }}>
                 <ul className="flex flex-col gap-1 mt-2">
                   {rules.map((rule) => (
-                    <li key={rule.label} className="flex items-center gap-2 !text-xs !font-semibold">
+                    <li key={rule.label} className="flex items-center gap-2 text-xs font-semibold">
                       <span className={rule.valid ? "text-green-700" : "text-gray-400"}>{rule.valid ? "✓" : "✗"}</span>
                       <span className={rule.valid ? "text-green-700" : "text-gray-400"}>{rule.label}</span>
                     </li>
                   ))}
                 </ul>
               </div>
-            </Field.Root>
+            </div>
 
-            <Button type="submit" className="!my-1" size="xl" width="full" borderRadius="xl" colorPalette="black" disabled={isSubmitDisabled}>
+            <Button type="submit" size="xl" className="my-1 w-full" disabled={isSubmitDisabled}>
               {isSignUp ? "Sign up" : "Sign in"}
             </Button>
 
-            <p className="!text-sm !text-center">
+            <p className="text-sm text-center">
               {isSignUp ? "Already have an account? " : "Don't have an account? "}
               <Link
                 href={isSignUp ? "/app/auth/sign-in" : "/app/auth/sign-up"}
-                className="!font-semibold !text-black !underline decoration-gray-300 underline-offset-2"
+                className="font-semibold text-black underline decoration-gray-300 underline-offset-2"
               >
                 {isSignUp ? "Sign in" : "Sign up"}
               </Link>
@@ -174,11 +182,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* Footer — sign up only */}
-      <footer className={`w-full !py-6 !px-8 text-center !text-sm !font-semibold text-gray-500 bg-gray-50 transition-all duration-300 ${isSignUp ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
+      <footer className={`w-full py-6 px-8 text-center text-sm font-semibold text-gray-500 bg-gray-50 transition-all duration-300 ${isSignUp ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
         By continuing, you agree to our{" "}
-        <Link href="/terms" className="!underline decoration-gray-300 hover:text-gray-600">Terms of Service</Link>
+        <Link href="/terms" className="underline decoration-gray-300 hover:text-gray-600">Terms of Service</Link>
         {" "}and{" "}
-        <Link href="/privacy" className="!underline decoration-gray-300 hover:text-gray-600">Privacy Policy</Link>.
+        <Link href="/privacy" className="underline decoration-gray-300 hover:text-gray-600">Privacy Policy</Link>.
       </footer>
     </>
   );

@@ -1,8 +1,9 @@
 "use client";
 
-import { Button, Input } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function VerifyOtpPage() {
   const router = useRouter();
@@ -34,7 +35,7 @@ export default function VerifyOtpPage() {
     if (e.key === "Backspace" && !digits[index] && index > 0) {
       refs.current[index - 1]?.focus();
     }
-  }
+  };
 
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
@@ -50,8 +51,8 @@ export default function VerifyOtpPage() {
     <div className="flex flex-col items-center justify-center flex-1 p-5">
       <div className="flex flex-col w-full max-w-[360px] gap-6">
         <header className="flex flex-col items-center gap-3 text-center">
-          <h1 className="font-raleway !text-2xl !font-extrabold">Verify your email</h1>
-          <p className="!text-sm text-gray-500 !leading-relaxed">
+          <h1 className="font-raleway text-2xl font-extrabold">Verify your email</h1>
+          <p className="text-sm text-gray-500 leading-relaxed">
             We sent a 6-digit code to your email address. Enter it below to continue.
           </p>
         </header>
@@ -68,23 +69,18 @@ export default function VerifyOtpPage() {
                 onPaste={handlePaste}
                 maxLength={1}
                 inputMode="numeric"
-                textAlign="center"
-                fontSize="lg"
-                fontWeight="bold"
-                borderRadius="xl"
-                width="12"
-                height="12"
+                className="h-12 w-12 rounded-xl text-center text-lg font-bold font-montserrat"
               />
             ))}
           </div>
 
-          <div className="!font-montserrat text-center !text-sm text-gray-500">
+          <div className="font-montserrat text-center text-sm text-gray-500">
             {seconds > 0 ? (
               <span>Resend code in 0:{String(seconds).padStart(2, "0")}</span>
             ) : (
               <button
                 type="button"
-                className="!text-sm !font-semibold !underline cursor-pointer text-black"
+                className="text-sm font-semibold underline cursor-pointer text-black"
                 onClick={() => setSeconds(59)}
               >
                 Resend code
@@ -92,18 +88,18 @@ export default function VerifyOtpPage() {
             )}
           </div>
 
-          <Button type="submit" size="xl" width="full" borderRadius="xl" colorPalette="black" disabled={digits.some((d) => !d)}>
+          <Button type="submit" size="xl" className="w-full" disabled={digits.some((d) => !d)}>
             Verify
           </Button>
         </form>
 
         <button
-          className="!text-sm !font-semibold !underline cursor-pointer"
+          className="text-sm font-semibold underline cursor-pointer"
           onClick={() => router.push("/app/auth/sign-in")}
         >
           Return to Sign In
         </button>
-        <div className="h-[200px]"></div>
+        <div className="h-[200px]" />
       </div>
     </div>
   );
