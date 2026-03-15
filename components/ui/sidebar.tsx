@@ -130,6 +130,8 @@ function SidebarProvider({
     <SidebarContext.Provider value={contextValue}>
       <div
         data-slot="sidebar-wrapper"
+        data-state={state}
+        data-collapsible={state === "collapsed" ? "icon" : ""}
         style={
           {
             "--sidebar-width": SIDEBAR_WIDTH,
@@ -138,7 +140,7 @@ function SidebarProvider({
           } as React.CSSProperties
         }
         className={cn(
-          "group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar",
+          "group/sidebar-wrapper group flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar",
           className
         )}
         {...props}
