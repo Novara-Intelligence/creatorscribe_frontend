@@ -52,7 +52,7 @@ export default function VerifyOtpPage() {
       <div className="flex flex-col w-full max-w-[360px] gap-6">
         <header className="flex flex-col items-center gap-3 text-center">
           <h1 className="font-raleway text-2xl font-extrabold">Verify your email</h1>
-          <p className="text-sm text-gray-500 leading-relaxed">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             We sent a 6-digit code to your email address. Enter it below to continue.
           </p>
         </header>
@@ -74,13 +74,13 @@ export default function VerifyOtpPage() {
             ))}
           </div>
 
-          <div className="font-montserrat text-center text-sm text-gray-500">
+          <div className="font-montserrat text-center text-sm text-muted-foreground">
             {seconds > 0 ? (
               <span>Resend code in 0:{String(seconds).padStart(2, "0")}</span>
             ) : (
               <button
                 type="button"
-                className="text-sm font-semibold underline cursor-pointer text-black"
+                className="text-sm font-semibold underline cursor-pointer text-primary"
                 onClick={() => setSeconds(59)}
               >
                 Resend code

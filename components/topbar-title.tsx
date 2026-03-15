@@ -13,6 +13,6 @@ export function TopbarTitle() {
   const pathname = usePathname();
   const name = routeNames[pathname] ?? "Home";
   return (
-    <span className="!font-raleway !text-sm !font-semibold !text-gray-800">{name}</span>
+    <span className="font-raleway text-sm font-semibold text-primary">{name}</span>
   );
 }

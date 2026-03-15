@@ -25,7 +25,7 @@ export default function ResetPasswordPage() {
       <div className="flex flex-col w-full max-w-[360px] gap-6">
         <header className="flex flex-col items-center gap-3 text-center">
           <h1 className="font-raleway text-2xl font-extrabold">Reset your password</h1>
-          <p className="text-sm text-gray-500 leading-relaxed">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             Enter the email address associated with your account, and we&apos;ll send you a one-time code to reset your password.
           </p>
         </header>
@@ -38,7 +38,7 @@ export default function ResetPasswordPage() {
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="field-reset-email"
-              className={cn("text-sm font-semibold", emailError && "text-red-500")}
+              className={cn("text-sm font-semibold", emailError && "text-destructive")}
             >
               Email
             </label>
@@ -57,7 +57,7 @@ export default function ResetPasswordPage() {
               className="h-11 rounded-xl text-sm font-medium font-montserrat"
             />
             {emailError && (
-              <p className="flex items-center gap-1 text-xs font-semibold text-red-500">
+              <p className="flex items-center gap-1 text-xs font-semibold text-destructive">
                 <MdErrorOutline className="size-3.5 shrink-0" />
                 {emailError}
               </p>

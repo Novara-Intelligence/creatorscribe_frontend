@@ -1,5 +1,5 @@
-import { Moon02Icon } from "hugeicons-react";
-import { Moon, ChevronRight, Mic, Headphones, ImagePlay, Bot, Music, Disc, Video, Languages } from "lucide-react";
+import { ChevronRight, Mic, Headphones, ImagePlay, Bot, Music, Languages } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const ACTION_ITEMS = [
   { label: "Instant speech", icon: Mic },
@@ -14,23 +14,20 @@ export default function HomePage() {
   return (
     <div className="flex flex-col flex-1 p-1 group-data-[collapsible=icon]:px-22 group-data-[collapsible=icon]:py-18 h-full">
       <header className="flex items-center justify-between w-full">
-        <button className="flex items-center gap-2.5 pl-1.5 pr-3 py-1.5 rounded-full border border-gray-200 bg-white hover:bg-gray-50 transition-colors">
-          <span className="bg-[#24292f] text-white text-xs font-medium px-2 py-1 rounded-full">
+        <button className="flex items-center gap-2.5 pl-1.5 pr-3 py-1.5 rounded-full border border-gray-200 bg-white hover:bg-gray-50 transition-colors dark:bg-zinc-900 dark:border-zinc-700 dark:hover:bg-zinc-800">
+          <span className="bg-[#24292f] text-white text-xs font-medium px-2 py-1 rounded-full dark:bg-zinc-100 dark:text-zinc-900">
             New
           </span>
           <span className="text-sm font-medium tracking-tight">Caption Generator</span>
           <ChevronRight className="w-3.5 h-3.5 text-gray-400 stroke-[2.5]" />
         </button>
 
-        <button className="hover:text-black transition-colors">
-          {/* <Moon className="w-5 h-5 fill-current" /> */}
-          <Moon02Icon size={18} />
-        </button>
+        <ThemeToggle />
       </header>
 
       <main className="flex flex-col mt-8">
         <div className="flex flex-col">
-          <span className="text-sm font-semibold text-gray-400 tracking-wide">My Workspace</span>
+          <span className="text-sm font-semibold text-muted-foreground tracking-wide">My Workspace</span>
           <h1 className="text-2xl font-bold tracking-tight">
             Good afternoon, Dhinesh
           </h1>
@@ -40,9 +37,9 @@ export default function HomePage() {
           {ACTION_ITEMS.map((item) => (
             <button key={item.label} className="group flex flex-col items-center gap-3">
               <div className="w-full aspect-square bg-muted rounded-3xl flex items-center justify-center cursor-pointer">
-                <item.icon className="w-10 h-10 text-gray-600" />
+                <item.icon className="w-10 h-10 text-muted-foreground" />
               </div>
-              <span className="text-[13px] font-semibold text-gray-700 tracking-tight">
+              <span className="text-[13px] font-semibold text-foreground tracking-tight">
                 {item.label}
               </span>
             </button>

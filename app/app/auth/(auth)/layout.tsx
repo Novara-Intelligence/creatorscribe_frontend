@@ -76,7 +76,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               transition: "max-height 0.35s ease, opacity 0.35s ease",
             }}>
               <Button variant="outline" size="xl" className="w-full justify-between">
-                <Image src="/icons/ic_apple.svg" alt="Apple" width={22} height={22} />
+                <Image src="/icons/ic_apple.svg" alt="Apple" width={22} height={22} className="dark:invert" />
                 <p>Sign in with Apple</p>
                 <div />
               </Button>
@@ -116,7 +116,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 className="h-11 rounded-xl text-sm font-medium font-montserrat"
               />
               {emailError && (
-                <p className="flex items-center gap-1 text-xs font-semibold text-red-500">
+                <p className="flex items-center gap-1 text-xs font-semibold text-destructive">
                   <MdErrorOutline className="size-3.5 shrink-0" />
                   {emailError}
                 </p>
@@ -133,7 +133,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                   opacity: isSignUp ? 0 : 1,
                   whiteSpace: "nowrap",
                 }}>
-                  <Link href="/app/auth/reset-password" className="text-xs font-semibold text-gray-500 hover:underline underline-offset-2">
+                  <Link href="/app/auth/reset-password" className="text-xs font-semibold text-muted-foreground hover:underline underline-offset-2">
                     Forgot your password?
                   </Link>
                 </div>
@@ -156,8 +156,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 <ul className="flex flex-col gap-1 mt-2">
                   {rules.map((rule) => (
                     <li key={rule.label} className="flex items-center gap-2 text-xs font-semibold">
-                      <span className={rule.valid ? "text-green-700" : "text-gray-400"}>{rule.valid ? "✓" : "✗"}</span>
-                      <span className={rule.valid ? "text-green-700" : "text-gray-400"}>{rule.label}</span>
+                      <span className={rule.valid ? "text-green-700" : "text-muted-foreground"}>{rule.valid ? "✓" : "✗"}</span>
+                      <span className={rule.valid ? "text-green-700" : "text-muted-foreground"}>{rule.label}</span>
                     </li>
                   ))}
                 </ul>
@@ -172,7 +172,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               {isSignUp ? "Already have an account? " : "Don't have an account? "}
               <Link
                 href={isSignUp ? "/app/auth/sign-in" : "/app/auth/sign-up"}
-                className="font-semibold text-black underline decoration-gray-300 underline-offset-2"
+                className="font-semibold underline underline-offset-2"
               >
                 {isSignUp ? "Sign in" : "Sign up"}
               </Link>
@@ -182,11 +182,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* Footer — sign up only */}
-      <footer className={`w-full py-6 px-8 text-center text-sm font-semibold text-gray-500 bg-gray-50 transition-all duration-300 ${isSignUp ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
+      <footer className={`w-full py-6 px-8 text-center text-sm font-semibold text-muted-foreground bg-muted transition-all duration-300 ${isSignUp ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
         By continuing, you agree to our{" "}
-        <Link href="/terms" className="underline decoration-gray-300 hover:text-gray-600">Terms of Service</Link>
+        <Link href="/terms" className="underline decoration-muted-foreground hover:text-foreground">Terms of Service</Link>
         {" "}and{" "}
-        <Link href="/privacy" className="underline decoration-gray-300 hover:text-gray-600">Privacy Policy</Link>.
+        <Link href="/privacy" className="underline decoration-muted-foreground hover:text-foreground">Privacy Policy</Link>.
       </footer>
     </>
   );

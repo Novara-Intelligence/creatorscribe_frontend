@@ -42,14 +42,14 @@ export function AppSidebar() {
             CreatorScribe
           </span>
         </div>
-        <ClientSwitcher/>
+        <ClientSwitcher />
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarMenu className="px-3">
           {navItems.map((item) => (
             <SidebarMenuItem key={item.label} className="py-1 flex items-center justify-center">
-              <SidebarMenuButton render={<a href={item.href} />} isActive={pathname === item.href} className="px-2 !py-4 rounded-lg group-data-[collapsible=icon]:justify-center data-[active]:bg-gray-200 text-gray-600 data-[active]:text-gray-900">
+              <SidebarMenuButton render={<a href={item.href} />} isActive={pathname === item.href} className="px-2 !py-4 rounded-lg group-data-[collapsible=icon]:justify-center data-[active]:bg-gray-200 dark:data-[active]:bg-secondary text-muted-foreground data-[active]:text-primary">
                 <item.icon className="shrink-0 !size-4.5" strokeWidth={1.9} />
                 <span className="font-raleway mt-0.5 text-sm font-semibold leading-none group-data-[collapsible=icon]:hidden">{item.label}</span>
               </SidebarMenuButton>
@@ -62,7 +62,7 @@ export function AppSidebar() {
         <SidebarMenu>
           {navFooterItems.map((item) => (
             <SidebarMenuItem key={item.label} className="py-1 flex items-center justify-center">
-              <SidebarMenuButton render={<a href={item.href} />} isActive={pathname === item.href} className="px-2 !py-4 rounded-lg group-data-[collapsible=icon]:justify-center data-[active]:bg-gray-200 text-gray-600 data-[active]:text-gray-900">
+              <SidebarMenuButton render={<a href={item.href} />} isActive={pathname === item.href} className="px-2 !py-4 rounded-lg group-data-[collapsible=icon]:justify-center data-[active]:bg-gray-200 dark:data-[active]:bg-secondary text-muted-foreground data-[active]:text-primary">
                 <item.icon className="shrink-0 !size-4.5" strokeWidth={1.9} />
                 <span className="font-raleway mt-0.5 text-sm font-semibold leading-none group-data-[collapsible=icon]:hidden">{item.label}</span>
               </SidebarMenuButton>
@@ -70,20 +70,12 @@ export function AppSidebar() {
           ))}
         </SidebarMenu>
         {/* Upgrade button — full version when expanded */}
-        <div className="rounded-lg border py-1 flex items-center justify-between gap-2 bg-[image:repeating-linear-gradient(135deg,white,white_4px,rgba(0,0,0,0.06)_4px,rgba(0,0,0,0.06)_8px)] group-data-[collapsible=icon]:hidden">
-          <button className="flex-1 flex items-center justify-center gap-2 text-sm font-semibold">
-            <Image src="/icons/ic_zap.svg" alt="Zap" width={18} height={18} />
-            Upgrade
+        <div className="rounded-lg border flex items-center justify-center gap-2 bg-[image:repeating-linear-gradient(135deg,var(--background),var(--background)_4px,rgba(0,0,0,0.06)_4px,rgba(0,0,0,0.06)_8px)] dark:bg-[image:repeating-linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.04)_4px,transparent_4px,transparent_8px)] dark:bg-card">
+          <button className="flex-1 rounded-lg  flex items-center justify-center gap-2 text-sm py-2 font-semibold text-foreground bg-gradient-to-r from-background to-background/0">
+            <Image src="/icons/ic_zap.svg" alt="Zap" width={18} height={18} className="dark:invert" />
+            <span className="group-data-[collapsible=icon]:hidden">Upgrade</span>
           </button>
         </div>
-        {/* Upgrade button — icon only when collapsed */}
-        <SidebarMenu className="hidden group-data-[collapsible=icon]:flex">
-          <SidebarMenuItem>
-            <SidebarMenuButton render={<a href="/app/home/upgrade" />} className="p-3 justify-center text-gray-600">
-              <Image src="/icons/ic_zap.svg" alt="Upgrade" width={18} height={18} />
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );
