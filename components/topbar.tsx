@@ -17,9 +17,9 @@ import {
   DropdownMenuSubContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
 export function Topbar({ progress = 0 }: { progress?: number }) {
   const { theme, setTheme } = useTheme();
+
   return (
     <header className="h-13 !border-b px-3 w-full flex items-center justify-between gap-3">
       <div className="flex items-center gap-3">
@@ -51,11 +51,7 @@ export function Topbar({ progress = 0 }: { progress?: number }) {
               />
             </svg>
             <Avatar className="absolute inset-[3px] size-auto after:hidden m-0.5 group-hover/avatar:opacity-0 transition-opacity">
-              <AvatarImage
-                src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop&crop=face"
-                alt="Profile"
-              />
-              <AvatarFallback>VC</AvatarFallback>
+              <AvatarFallback>CS</AvatarFallback>
             </Avatar>
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity">
               <span className="font-montserrat text-primary text-[9px] font-semibold leading-none">
@@ -90,12 +86,12 @@ export function Topbar({ progress = 0 }: { progress?: number }) {
                   {/* Row 2: Total */}
                   <div className="flex items-center justify-between">
                     <span className="font-montserrat text-xs text-muted-foreground">Total</span>
-                    <span className="font-montserrat text-xs font-medium">10,000 credits</span>
+                    <span className="font-montserrat text-xs font-medium">— credits</span>
                   </div>
                   {/* Row 3: Remaining */}
                   <div className="flex items-center justify-between">
                     <span className="font-montserrat text-xs text-muted-foreground">Remaining</span>
-                    <span className="font-montserrat text-xs font-medium">8,147</span>
+                    <span className="font-montserrat text-xs font-medium">—</span>
                   </div>
                 </div>
               </div>
@@ -160,7 +156,9 @@ export function Topbar({ progress = 0 }: { progress?: number }) {
               </DropdownMenuSub>
             </DropdownMenuGroup>
             <DropdownMenuGroup className="bg-background overflow-hidden px-0.5 -mx-0.5 py-1">
-              <DropdownMenuItem className="px-2 !py-1.5 rounded-md font-medium text-sm flex items-center gap-2">
+              <DropdownMenuItem
+                className="px-2 !py-1.5 rounded-md font-medium text-sm flex items-center gap-2"
+              >
                 <LogOut className="size-3.5" />
                 Logout
               </DropdownMenuItem>

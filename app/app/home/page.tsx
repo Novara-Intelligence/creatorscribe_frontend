@@ -10,7 +10,16 @@ const ACTION_ITEMS = [
   { label: "Dubbed video", icon: Languages },
 ];
 
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 export default function HomePage() {
+  const firstName = "there";
+
   return (
     <div className="flex flex-col flex-1 p-1 group-data-[collapsible=icon]:px-22 group-data-[collapsible=icon]:py-18 h-full">
       <header className="flex items-center justify-between w-full">
@@ -29,7 +38,7 @@ export default function HomePage() {
         <div className="flex flex-col">
           <span className="text-sm font-semibold text-muted-foreground tracking-wide">My Workspace</span>
           <h1 className="text-2xl font-bold tracking-tight">
-            Good afternoon, Dhinesh
+            {getGreeting()}, {firstName}
           </h1>
         </div>
 

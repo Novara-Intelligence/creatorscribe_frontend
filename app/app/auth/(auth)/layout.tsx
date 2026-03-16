@@ -5,16 +5,23 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { MdErrorOutline } from "react-icons/md";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { PasswordInput } from "@/components/ui/password-input";
 import { cn } from "@/lib/utils";
+import Cookies from "js-cookie";
+import { useAuth } from "@/hooks/useAuth";
+import { APP_ROUTES } from "@/constants/routes";
+import { APP_CONFIG } from "@/constants/config";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const isSignUp = pathname === "/app/auth/sign-up";
+
+  const { register, isLoading, error, clearError } = useAuth();
 
   const [password, setPassword] = useState("");
   const [passwordTouched, setPasswordTouched] = useState(false);
@@ -26,7 +33,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     setPasswordTouched(false);
     setEmail("");
     setEmailError("");
-  }, [isSignUp]);
+    clearError();
+  }, [isSignUp, clearError]);
 
   const validateEmail = (value: string) => {
     if (!value) return "Email is required";
@@ -42,7 +50,23 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
   const passwordValid = rules.every((r) => r.valid);
   const isSubmitDisabled =
-    !email || !!validateEmail(email) || !password || (isSignUp ? !passwordValid : false);
+    isLoading || !email || !!validateEmail(email) || !password || (isSignUp ? !passwordValid : false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSignUp) {
+      try {
+        await register({ email, password });
+        Cookies.set(APP_CONFIG.otpPendingCookieName, "1", { sameSite: "lax" });
+        router.push(APP_ROUTES.AUTH.VERIFY_OTP);
+      } catch {
+        // error shown from store
+      }
+    } else {
+      // sign-in — TODO
+      router.push(APP_ROUTES.APP.HOME);
+    }
+  };
 
   return (
     <>
@@ -85,14 +109,16 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
           <Separator className="my-1" />
 
+          {/* API error */}
+          {error && (
+            <Alert variant="destructive">
+              <MdErrorOutline className="size-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
           {/* Form */}
-          <form className="flex flex-col gap-4 mt-2" onSubmit={(e) => {
-            e.preventDefault();
-            if (isSignUp) {
-              sessionStorage.setItem("otp_allowed", "1");
-              router.push("/app/auth/verify-otp");
-            }
-          }}>
+          <form className="flex flex-col gap-4 mt-2" onSubmit={handleSubmit}>
             {/* Email field */}
             <div className="flex flex-col gap-1.5">
               <label
@@ -165,7 +191,14 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             </div>
 
             <Button type="submit" size="xl" className="my-1 w-full" disabled={isSubmitDisabled}>
-              {isSignUp ? "Sign up" : "Sign in"}
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                  {isSignUp ? "Signing up…" : "Signing in…"}
+                </span>
+              ) : (
+                isSignUp ? "Sign up" : "Sign in"
+              )}
             </Button>
 
             <p className="text-sm text-center">

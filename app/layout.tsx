@@ -3,6 +3,7 @@ import { Raleway, Montserrat, Ubuntu_Mono, Geist } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeFavicon } from "@/components/theme-favicon";
+import { AuthInitializer } from "@/components/providers/AuthInitializer";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -49,7 +50,9 @@ export default function RootLayout({
         <TooltipProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <ThemeFavicon />
-            {children}
+            <AuthInitializer>
+              {children}
+            </AuthInitializer>
           </ThemeProvider>
         </TooltipProvider>
       </body>

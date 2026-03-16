@@ -2,20 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import Cookies from "js-cookie";
+import { APP_CONFIG } from "@/constants/config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { APP_ROUTES } from "@/constants/routes";
 
 export default function VerifyOtpPage() {
   const router = useRouter();
   const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
   const [seconds, setSeconds] = useState(59);
   const refs = useRef<(HTMLInputElement | null)[]>(Array(6).fill(null));
-
-  useEffect(() => {
-    if (!sessionStorage.getItem("otp_allowed")) {
-      router.replace("/app/auth/sign-in");
-    }
-  }, [router]);
 
   useEffect(() => {
     if (seconds <= 0) return;
@@ -47,6 +44,13 @@ export default function VerifyOtpPage() {
     refs.current[focusIndex]?.focus();
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    Cookies.remove(APP_CONFIG.otpPendingCookieName);
+    // TODO: wire verifyOtp API
+    router.push(APP_ROUTES.APP.HOME);
+  };
+
   return (
     <div className="flex flex-col items-center justify-center flex-1 p-5">
       <div className="flex flex-col w-full max-w-[360px] gap-6">
@@ -57,7 +61,7 @@ export default function VerifyOtpPage() {
           </p>
         </header>
 
-        <form className="flex flex-col gap-4">
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <div className="flex gap-2 justify-center">
             {digits.map((digit, i) => (
               <Input
@@ -95,7 +99,7 @@ export default function VerifyOtpPage() {
 
         <button
           className="text-sm font-semibold underline cursor-pointer"
-          onClick={() => router.push("/app/auth/sign-in")}
+          onClick={() => router.push(APP_ROUTES.AUTH.SIGN_IN)}
         >
           Return to Sign In
         </button>
