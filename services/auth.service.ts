@@ -1,5 +1,5 @@
 import axiosInstance from "@/lib/axios";
-import type { LoginPayload, OAuthSignInPayload, RegisterPayload, ResetPasswordPayload, VerifyOtpPayload, VerifyOtpResponse, VerifyResetOtpPayload, VerifyResetOtpResponse } from "@/types/user";
+import type { LoginPayload, OAuthSignInPayload, RegisterPayload, ResetPasswordPayload, VerifyOtpPayload, VerifyOtpResponse, VerifyResetOtpPayload, VerifyResetOtpResponse } from "@/types/auth";
 
 const authService = {
   async oauthSignIn(payload: OAuthSignInPayload): Promise<VerifyOtpResponse> {

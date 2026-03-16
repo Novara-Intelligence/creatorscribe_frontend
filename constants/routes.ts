@@ -14,6 +14,11 @@ export const APP_ROUTES = {
     ADDONS: "/app/addons",
     FAQ: "/app/faq",
   },
+  SETTINGS: {
+    PROFILE: "/app/settings/profile",
+    CLIENTS: "/app/settings/clients",
+    GENERAL: "/app/settings/general",
+  },
 } as const;
 
 export const PUBLIC_ROUTES: string[] = ["/", "/terms", "/privacy"];
@@ -25,4 +30,4 @@ export const AUTH_ROUTES: string[] = [
   APP_ROUTES.AUTH.RESET_PASSWORD,
 ];
 
-export const PROTECTED_ROUTE_PREFIXES: string[] = ["/app/home", "/app/analytics", "/app/content-calendar", "/app/addons", "/app/faq"];
+export const PROTECTED_ROUTE_PREFIXES: string[] = ["/app/home", "/app/analytics", "/app/content-calendar", "/app/addons", "/app/faq", "/app/settings"];

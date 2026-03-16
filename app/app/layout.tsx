@@ -2,7 +2,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Topbar } from "@/components/topbar";
 
-export default function HomeLayout({ children }: { children: React.ReactNode }) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -10,7 +10,7 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
         <div className="sticky top-0 z-10">
           <Topbar progress={0.1} />
         </div>
-        <main className="flex-1 overflow-y-auto p-4">
+        <main className="flex-1 overflow-y-auto">
           {children}
         </main>
       </div>

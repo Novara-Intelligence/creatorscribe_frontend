@@ -6,7 +6,7 @@ import Cookies from "js-cookie";
 import authService from "@/services/auth.service";
 import { AppError } from "@/types/api";
 import { APP_CONFIG } from "@/constants/config";
-import type { LoginPayload, RegisterPayload, ResetPasswordPayload, VerifyOtpPayload, VerifyResetOtpPayload } from "@/types/user";
+import type { LoginPayload, RegisterPayload, ResetPasswordPayload, VerifyOtpPayload, VerifyResetOtpPayload } from "@/types/auth";
 
 interface AuthState {
   isLoading: boolean;

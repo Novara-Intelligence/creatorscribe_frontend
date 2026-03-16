@@ -2,7 +2,7 @@
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { LayoutAlignLeftIcon, Folder03Icon, Notification01Icon } from "hugeicons-react";
-import { ArrowUpRight, LogOut, Check } from "lucide-react";
+import { ArrowUpRight, LogOut, Check, Plus } from "lucide-react";
 import { useTheme } from "next-themes";
 import { TopbarTitle } from "@/components/topbar-title";
 import { Button } from "@/components/ui/button";
@@ -20,11 +20,16 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { APP_ROUTES } from "@/constants/routes";
+import useClientStore from "@/store/clientStore";
 
 export function Topbar({ progress = 0 }: { progress?: number }) {
   const { theme, setTheme } = useTheme();
   const { logout } = useAuth();
   const router = useRouter();
+  const clients = useClientStore((s) => s.clients);
+  const activeClientId = useClientStore((s) => s.activeClientId);
+  const setActiveClientId = useClientStore((s) => s.setActiveClientId);
+  const activeClient = clients.find((c) => c.id === activeClientId) ?? clients[0];
 
   const handleLogout = async () => {
     await logout();
@@ -71,6 +76,39 @@ export function Topbar({ progress = 0 }: { progress?: number }) {
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" sideOffset={14} className="w-56 p-0.5 bg-muted overflow-hidden">
+            {/* Profile + Clients row */}
+            <DropdownMenuGroup className="bg-background border border-border rounded-lg mb-1 overflow-hidden">
+              <DropdownMenuItem className="px-3 py-2.5 flex items-center gap-2.5 rounded-none border-b" onClick={() => router.push(APP_ROUTES.SETTINGS.PROFILE)}>
+                <Avatar className="size-7 shrink-0">
+                  <AvatarFallback className="text-xs font-semibold font-montserrat">CS</AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col overflow-hidden">
+                  <span className="text-xs font-semibold font-montserrat truncate">Profile</span>
+                  <span className="text-[11px] text-muted-foreground font-montserrat truncate">Manage your account</span>
+                </div>
+              </DropdownMenuItem>
+              <div className="px-2 py-1.5 flex flex-col gap-0.5">
+                <div className="flex items-center justify-between px-1 mb-0.5">
+                  <span className="text-[10px] font-semibold text-muted-foreground font-montserrat uppercase tracking-wide">Clients</span>
+                  <DropdownMenuItem className="h-5 w-5 p-0 flex items-center justify-center rounded-md cursor-pointer">
+                    <Plus className="size-3" />
+                  </DropdownMenuItem>
+                </div>
+                {clients.map((client) => (
+                  <DropdownMenuItem
+                    key={client.id}
+                    className="px-2 py-1.5 flex items-center gap-2 rounded-md"
+                    onClick={() => setActiveClientId(client.id)}
+                  >
+                    <div className="flex size-5 shrink-0 items-center justify-center rounded-sm border bg-muted text-[10px] font-montserrat uppercase">
+                      {client.client_name[0]}
+                    </div>
+                    <span className="truncate text-xs font-medium font-montserrat capitalize flex-1">{client.client_name}</span>
+                    {activeClient?.id === client.id && <Check className="size-3 shrink-0 text-primary" />}
+                  </DropdownMenuItem>
+                ))}
+              </div>
+            </DropdownMenuGroup>
             <DropdownMenuGroup>
               <div className="bg-background border border-border rounded-lg p-3 flex flex-col gap-4">
                 {/* Row 1: progress + balance | upgrade */}
@@ -108,7 +146,6 @@ export function Topbar({ progress = 0 }: { progress?: number }) {
               </div>
             </DropdownMenuGroup>
             <DropdownMenuGroup className="bg-background overflow-hidden border-y mt-1 px-0.5 -mx-0.5 py-1">
-              <DropdownMenuItem className="px-2 !py-1.5 rounded-md font-medium text-sm">Settings</DropdownMenuItem>
               <DropdownMenuItem className="px-2 !py-1.5 rounded-md font-medium text-sm">Subscription</DropdownMenuItem>
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="px-2 !py-1.5 rounded-md font-medium text-sm">
