@@ -21,7 +21,7 @@ import { APP_CONFIG, FACEBOOK_APP_ID } from "@/constants/config";
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const isSignUp = pathname === "/app/auth/sign-up";
+  const isSignUp = pathname === APP_ROUTES.AUTH.SIGN_UP;
 
   const { googleLogin, facebookLogin, login, register, isLoading, error, clearError } = useAuth();
 
@@ -140,19 +140,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               <p>{isSignUp ? "Sign up" : "Sign in"} with Facebook</p>
               <div />
             </Button>
-            {/* Apple — hidden on sign up */}
-            {/* <div style={{
-              overflow: "hidden",
-              maxHeight: isSignUp ? "0px" : "60px",
-              opacity: isSignUp ? 0 : 1,
-              transition: "max-height 0.35s ease, opacity 0.35s ease",
-            }}>
-              <Button variant="outline" size="xl" className="w-full justify-between">
-                <Image src="/icons/ic_apple.svg" alt="Apple" width={22} height={22} className="dark:invert" />
-                <p>Sign in with Apple</p>
-                <div />
-              </Button>
-            </div> */}
           </div>
 
           <Separator className="my-1" />
@@ -207,7 +194,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                   opacity: isSignUp ? 0 : 1,
                   whiteSpace: "nowrap",
                 }}>
-                  <Link href="/app/auth/reset-password" className="text-xs font-semibold text-muted-foreground hover:underline underline-offset-2">
+                  <Link href={APP_ROUTES.AUTH.RESET_PASSWORD} className="text-xs font-semibold text-muted-foreground hover:underline underline-offset-2">
                     Forgot your password?
                   </Link>
                 </div>
@@ -253,7 +240,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <p className="text-sm text-center">
               {isSignUp ? "Already have an account? " : "Don't have an account? "}
               <Link
-                href={isSignUp ? "/app/auth/sign-in" : "/app/auth/sign-up"}
+                href={isSignUp ? APP_ROUTES.AUTH.SIGN_IN : APP_ROUTES.AUTH.SIGN_UP}
                 className="font-semibold underline underline-offset-2"
               >
                 {isSignUp ? "Sign in" : "Sign up"}

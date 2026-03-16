@@ -1,10 +1,10 @@
 export const APP_ROUTES = {
   AUTH: {
-    SIGN_IN: "/app/auth/sign-in",
-    SIGN_UP: "/app/auth/sign-up",
-    VERIFY_OTP: "/app/auth/verify-otp",
-    RESET_PASSWORD: "/app/auth/reset-password",
-    NEW_PASSWORD: "/app/auth/new-password",
+    SIGN_IN: "/auth/sign-in",
+    SIGN_UP: "/auth/sign-up",
+    VERIFY_OTP: "/auth/verify-otp",
+    RESET_PASSWORD: "/auth/reset-password",
+    NEW_PASSWORD: "/auth/new-password",
   },
   APP: {
     ROOT: "/app/home",
