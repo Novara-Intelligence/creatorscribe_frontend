@@ -1,3 +1,12 @@
+export interface OAuthSignInPayload {
+  provider: "google" | "facebook";
+  email: string;
+  full_name: string;
+  image: string;
+  oauth_id: string;
+  access_token: string;
+}
+
 export interface RegisterPayload {
   email: string;
   password: string;

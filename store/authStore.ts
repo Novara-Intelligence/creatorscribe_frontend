@@ -14,6 +14,8 @@ interface AuthState {
 }
 
 interface AuthActions {
+  googleLogin: (code: string) => Promise<void>;
+  facebookLogin: (accessToken: string) => Promise<void>;
   login: (payload: LoginPayload) => Promise<void>;
   logout: () => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
@@ -31,6 +33,56 @@ const useAuthStore = create<AuthStore>()(
     (set) => ({
       isLoading: false,
       error: null,
+
+      googleLogin: async (accessToken) => {
+        set({ isLoading: true, error: null });
+        try {
+          const userInfo = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }).then((r) => r.json());
+
+          const res = await authService.oauthSignIn({
+            provider: "google",
+            email: userInfo.email,
+            full_name: userInfo.name,
+            image: userInfo.picture,
+            oauth_id: userInfo.sub,
+            access_token: accessToken,
+          });
+          Cookies.set(APP_CONFIG.accessTokenCookieName, res.data.access_token, { sameSite: "lax" });
+          Cookies.set(APP_CONFIG.refreshTokenCookieName, res.data.refresh_token, { sameSite: "lax" });
+          set({ isLoading: false });
+        } catch (err) {
+          const message = err instanceof AppError ? err.message : "Google sign-in failed.";
+          set({ isLoading: false, error: message });
+          throw err;
+        }
+      },
+
+      facebookLogin: async (accessToken) => {
+        set({ isLoading: true, error: null });
+        try {
+          const userInfo = await fetch(
+            `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${accessToken}`
+          ).then((r) => r.json());
+
+          const res = await authService.oauthSignIn({
+            provider: "facebook",
+            email: userInfo.email ?? "",
+            full_name: userInfo.name,
+            image: userInfo.picture?.data?.url ?? "",
+            oauth_id: userInfo.id,
+            access_token: accessToken,
+          });
+          Cookies.set(APP_CONFIG.accessTokenCookieName, res.data.access_token, { sameSite: "lax" });
+          Cookies.set(APP_CONFIG.refreshTokenCookieName, res.data.refresh_token, { sameSite: "lax" });
+          set({ isLoading: false });
+        } catch (err) {
+          const message = err instanceof AppError ? err.message : "Facebook sign-in failed.";
+          set({ isLoading: false, error: message });
+          throw err;
+        }
+      },
 
       login: async (payload) => {
         set({ isLoading: true, error: null });

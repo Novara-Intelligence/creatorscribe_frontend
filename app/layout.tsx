@@ -4,6 +4,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeFavicon } from "@/components/theme-favicon";
 import { AuthInitializer } from "@/components/providers/AuthInitializer";
+import { GoogleProvider } from "@/components/providers/GoogleProvider";
+import { FacebookProvider } from "@/components/providers/FacebookProvider";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -50,9 +52,13 @@ export default function RootLayout({
         <TooltipProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <ThemeFavicon />
-            <AuthInitializer>
-              {children}
-            </AuthInitializer>
+            <GoogleProvider>
+              <FacebookProvider>
+                <AuthInitializer>
+                  {children}
+                </AuthInitializer>
+              </FacebookProvider>
+            </GoogleProvider>
           </ThemeProvider>
         </TooltipProvider>
       </body>

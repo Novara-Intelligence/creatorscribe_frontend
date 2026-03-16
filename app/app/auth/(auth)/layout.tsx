@@ -13,16 +13,59 @@ import { Separator } from "@/components/ui/separator";
 import { PasswordInput } from "@/components/ui/password-input";
 import { cn } from "@/lib/utils";
 import Cookies from "js-cookie";
+import { useGoogleLogin } from "@react-oauth/google";
 import { useAuth } from "@/hooks/useAuth";
 import { APP_ROUTES } from "@/constants/routes";
-import { APP_CONFIG } from "@/constants/config";
+import { APP_CONFIG, FACEBOOK_APP_ID } from "@/constants/config";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const isSignUp = pathname === "/app/auth/sign-up";
 
-  const { login, register, isLoading, error, clearError } = useAuth();
+  const { googleLogin, facebookLogin, login, register, isLoading, error, clearError } = useAuth();
+
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async ({ access_token }) => {
+      try {
+        await googleLogin(access_token);
+        router.push(APP_ROUTES.APP.HOME);
+      } catch {
+        // error shown from store
+      }
+    },
+  });
+
+  const handleFacebookLogin = () => {
+    const callbackUrl = `${window.location.origin}/app/auth/facebook/callback`;
+    const params = new URLSearchParams({
+      client_id: FACEBOOK_APP_ID,
+      redirect_uri: callbackUrl,
+      scope: "email,public_profile",
+      response_type: "token",
+    });
+    const popup = window.open(
+      `https://www.facebook.com/v18.0/dialog/oauth?${params}`,
+      "FacebookLogin",
+      "width=500,height=650,left=400,top=100"
+    );
+
+    const handleMessage = async (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type !== "facebook_oauth") return;
+      window.removeEventListener("message", handleMessage);
+      popup?.close();
+      if (event.data.accessToken) {
+        try {
+          await facebookLogin(event.data.accessToken);
+          router.push(APP_ROUTES.APP.HOME);
+        } catch {
+          // error shown from store
+        }
+      }
+    };
+    window.addEventListener("message", handleMessage);
+  };
 
   const [password, setPassword] = useState("");
   const [passwordTouched, setPasswordTouched] = useState(false);
@@ -87,18 +130,18 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
           {/* Social buttons */}
           <div className="flex flex-col gap-3 w-full">
-            <Button variant="outline" size="xl" className="w-full justify-between">
+            <Button variant="outline" size="xl" className="w-full justify-between" onClick={() => handleGoogleLogin()}>
               <Image src="/icons/ic_google.svg" alt="Google" width={22} height={22} />
               <p>{isSignUp ? "Sign up" : "Sign in"} with Google</p>
               <div />
             </Button>
-            <Button variant="outline" size="xl" className="w-full justify-between">
+            <Button variant="outline" size="xl" className="w-full justify-between" onClick={() => handleFacebookLogin()}>
               <Image src="/icons/ic_facebook.svg" alt="Facebook" width={22} height={22} />
               <p>{isSignUp ? "Sign up" : "Sign in"} with Facebook</p>
               <div />
             </Button>
             {/* Apple — hidden on sign up */}
-            <div style={{
+            {/* <div style={{
               overflow: "hidden",
               maxHeight: isSignUp ? "0px" : "60px",
               opacity: isSignUp ? 0 : 1,
@@ -109,7 +152,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 <p>Sign in with Apple</p>
                 <div />
               </Button>
-            </div>
+            </div> */}
           </div>
 
           <Separator className="my-1" />

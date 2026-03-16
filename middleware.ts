@@ -12,6 +12,11 @@ export function middleware(request: NextRequest) {
   );
   const isAuthRoute = AUTH_ROUTES.includes(pathname);
 
+  // OAuth callback pages — always allow through
+  if (pathname.startsWith("/app/auth/facebook/callback")) {
+    return NextResponse.next();
+  }
+
   // verify-otp requires the otp_pending cookie set by register/reset-password
   if (pathname === APP_ROUTES.AUTH.VERIFY_OTP) {
     const otpPending = request.cookies.get(APP_CONFIG.otpPendingCookieName)?.value;
