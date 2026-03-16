@@ -2,13 +2,20 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Cookies from "js-cookie";
 import { MdErrorOutline } from "react-icons/md";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { APP_ROUTES } from "@/constants/routes";
+import { APP_CONFIG } from "@/constants/config";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
+  const { resetPassword, isLoading, error } = useAuth();
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
 
@@ -18,7 +25,18 @@ export default function ResetPasswordPage() {
     return "";
   };
 
-  const isSubmitDisabled = !email || !!validateEmail(email);
+  const isSubmitDisabled = isLoading || !email || !!validateEmail(email);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await resetPassword({ email });
+      Cookies.set(APP_CONFIG.otpPendingCookieName, email, { sameSite: "lax" });
+      router.push(`${APP_ROUTES.AUTH.VERIFY_OTP}?source=reset`);
+    } catch {
+      // error shown from store
+    }
+  };
 
   return (
     <div className="flex flex-col items-center justify-center flex-1 p-5">
@@ -30,11 +48,14 @@ export default function ResetPasswordPage() {
           </p>
         </header>
 
-        <form className="flex flex-col gap-4" onSubmit={(e) => {
-          e.preventDefault();
-          sessionStorage.setItem("otp_allowed", "1");
-          router.push("/app/auth/verify-otp");
-        }}>
+        {error && (
+          <Alert variant="destructive">
+            <MdErrorOutline className="size-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="field-reset-email"
@@ -63,14 +84,20 @@ export default function ResetPasswordPage() {
               </p>
             )}
           </div>
+
           <Button type="submit" size="xl" className="w-full" disabled={isSubmitDisabled}>
-            Send OTP
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <Spinner />
+                Sending OTP…
+              </span>
+            ) : "Send OTP"}
           </Button>
         </form>
 
         <button
           className="text-sm font-semibold underline cursor-pointer"
-          onClick={() => router.push("/app/auth/sign-in")}
+          onClick={() => router.push(APP_ROUTES.AUTH.SIGN_IN)}
         >
           Return to Sign In
         </button>

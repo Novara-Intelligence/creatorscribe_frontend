@@ -1,15 +1,23 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Cookies from "js-cookie";
+import { MdErrorOutline } from "react-icons/md";
 import { APP_CONFIG } from "@/constants/config";
+import { APP_ROUTES } from "@/constants/routes";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { APP_ROUTES } from "@/constants/routes";
+import { Spinner } from "@/components/ui/spinner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function VerifyOtpPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isResetFlow = searchParams.get("source") === "reset";
+
+  const { verifyOtp, resendOtp, isLoading, error } = useAuth();
   const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
   const [seconds, setSeconds] = useState(59);
   const refs = useRef<(HTMLInputElement | null)[]>(Array(6).fill(null));
@@ -40,15 +48,24 @@ export default function VerifyOtpPage() {
     const next = [...digits];
     pasted.split("").forEach((char, i) => (next[i] = char));
     setDigits(next);
-    const focusIndex = Math.min(pasted.length, 5);
-    refs.current[focusIndex]?.focus();
+    refs.current[Math.min(pasted.length, 5)]?.focus();
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    Cookies.remove(APP_CONFIG.otpPendingCookieName);
-    // TODO: wire verifyOtp API
-    router.push(APP_ROUTES.APP.HOME);
+    const email = Cookies.get(APP_CONFIG.otpPendingCookieName) ?? "";
+    const otp = digits.join("");
+    try {
+      if (isResetFlow) {
+        Cookies.set(APP_CONFIG.resetOtpCookieName, otp, { sameSite: "lax" });
+        router.push(APP_ROUTES.AUTH.NEW_PASSWORD);
+      } else {
+        await verifyOtp({ email, otp_code: otp });
+        router.push(APP_ROUTES.APP.HOME);
+      }
+    } catch {
+      // error shown from store
+    }
   };
 
   return (
@@ -57,7 +74,9 @@ export default function VerifyOtpPage() {
         <header className="flex flex-col items-center gap-3 text-center">
           <h1 className="font-raleway text-2xl font-extrabold">Verify your email</h1>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            We sent a 6-digit code to your email address. Enter it below to continue.
+            {isResetFlow
+              ? "Enter the code we sent to your email to continue resetting your password."
+              : "We sent a 6-digit code to your email address. Enter it below to continue."}
           </p>
         </header>
 
@@ -78,22 +97,46 @@ export default function VerifyOtpPage() {
             ))}
           </div>
 
+          {error && (
+            <Alert variant="destructive">
+              <MdErrorOutline className="size-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
           <div className="font-montserrat text-center text-sm text-muted-foreground">
             {seconds > 0 ? (
               <span>Resend code in 0:{String(seconds).padStart(2, "0")}</span>
             ) : (
               <button
                 type="button"
-                className="text-sm font-semibold underline cursor-pointer text-primary"
-                onClick={() => setSeconds(59)}
+                className="text-sm font-semibold underline cursor-pointer text-primary disabled:opacity-50"
+                disabled={isLoading}
+                onClick={async () => {
+                  const email = Cookies.get(APP_CONFIG.otpPendingCookieName) ?? "";
+                  try {
+                    await resendOtp({
+                      email,
+                      otp_type: isResetFlow ? "password_reset" : "registration",
+                    });
+                    setSeconds(59);
+                  } catch {
+                    // error shown from store
+                  }
+                }}
               >
                 Resend code
               </button>
             )}
           </div>
 
-          <Button type="submit" size="xl" className="w-full" disabled={digits.some((d) => !d)}>
-            Verify
+          <Button type="submit" size="xl" className="w-full" disabled={digits.some((d) => !d) || isLoading}>
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <Spinner />
+                Verifying…
+              </span>
+            ) : "Verify"}
           </Button>
         </form>
 

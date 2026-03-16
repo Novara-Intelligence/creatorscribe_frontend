@@ -12,11 +12,19 @@ export function middleware(request: NextRequest) {
   );
   const isAuthRoute = AUTH_ROUTES.includes(pathname);
 
-  // verify-otp requires the otp_pending cookie set by register
+  // verify-otp requires the otp_pending cookie set by register/reset-password
   if (pathname === APP_ROUTES.AUTH.VERIFY_OTP) {
     const otpPending = request.cookies.get(APP_CONFIG.otpPendingCookieName)?.value;
     if (!otpPending) {
       return NextResponse.redirect(new URL(APP_ROUTES.AUTH.SIGN_UP, request.url));
+    }
+  }
+
+  // new-password requires the reset_otp cookie set after entering OTP
+  if (pathname === APP_ROUTES.AUTH.NEW_PASSWORD) {
+    const resetOtp = request.cookies.get(APP_CONFIG.resetOtpCookieName)?.value;
+    if (!resetOtp) {
+      return NextResponse.redirect(new URL(APP_ROUTES.AUTH.RESET_PASSWORD, request.url));
     }
   }
 

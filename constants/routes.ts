@@ -4,6 +4,7 @@ export const APP_ROUTES = {
     SIGN_UP: "/app/auth/sign-up",
     VERIFY_OTP: "/app/auth/verify-otp",
     RESET_PASSWORD: "/app/auth/reset-password",
+    NEW_PASSWORD: "/app/auth/new-password",
   },
   APP: {
     ROOT: "/app/home",

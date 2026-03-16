@@ -1,9 +1,3 @@
-export interface ApiResponse<T> {
-  data: T;
-  message: string;
-  success: boolean;
-}
-
 export class AppError extends Error {
   code: string;
   statusCode: number;

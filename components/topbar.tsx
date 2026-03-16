@@ -17,8 +17,19 @@ import {
   DropdownMenuSubContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
+import { APP_ROUTES } from "@/constants/routes";
+
 export function Topbar({ progress = 0 }: { progress?: number }) {
   const { theme, setTheme } = useTheme();
+  const { logout } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push(APP_ROUTES.AUTH.SIGN_IN);
+  };
 
   return (
     <header className="h-13 !border-b px-3 w-full flex items-center justify-between gap-3">
@@ -158,6 +169,7 @@ export function Topbar({ progress = 0 }: { progress?: number }) {
             <DropdownMenuGroup className="bg-background overflow-hidden px-0.5 -mx-0.5 py-1">
               <DropdownMenuItem
                 className="px-2 !py-1.5 rounded-md font-medium text-sm flex items-center gap-2"
+                onClick={handleLogout}
               >
                 <LogOut className="size-3.5" />
                 Logout

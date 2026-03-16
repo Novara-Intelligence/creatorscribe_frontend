@@ -2,18 +2,25 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import Cookies from "js-cookie";
 import authService from "@/services/auth.service";
 import { AppError } from "@/types/api";
-import type { RegisterPayload } from "@/types/user";
+import { APP_CONFIG } from "@/constants/config";
+import type { LoginPayload, RegisterPayload, ResetPasswordPayload, VerifyOtpPayload, VerifyResetOtpPayload } from "@/types/user";
 
 interface AuthState {
   isLoading: boolean;
-  isInitializing: boolean;
   error: string | null;
 }
 
 interface AuthActions {
+  login: (payload: LoginPayload) => Promise<void>;
+  logout: () => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
+  resendOtp: (payload: { email: string; otp_type: "registration" | "password_reset" }) => Promise<void>;
+  resetPassword: (payload: ResetPasswordPayload) => Promise<void>;
+  verifyOtp: (payload: VerifyOtpPayload) => Promise<void>;
+  verifyResetOtp: (payload: VerifyResetOtpPayload) => Promise<void>;
   clearError: () => void;
 }
 
@@ -23,8 +30,33 @@ const useAuthStore = create<AuthStore>()(
   persist(
     (set) => ({
       isLoading: false,
-      isInitializing: false,
       error: null,
+
+      login: async (payload) => {
+        set({ isLoading: true, error: null });
+        try {
+          const res = await authService.login(payload);
+          Cookies.set(APP_CONFIG.accessTokenCookieName, res.data.access_token, { sameSite: "lax" });
+          Cookies.set(APP_CONFIG.refreshTokenCookieName, res.data.refresh_token, { sameSite: "lax" });
+          set({ isLoading: false });
+        } catch (err) {
+          const message = err instanceof AppError ? err.message : "Login failed.";
+          set({ isLoading: false, error: message });
+          throw err;
+        }
+      },
+
+      logout: async () => {
+        const refresh_token = Cookies.get(APP_CONFIG.refreshTokenCookieName) ?? "";
+        try {
+          await authService.logout({ refresh_token });
+        } catch {
+          // always clear locally even if API fails
+        } finally {
+          Cookies.remove(APP_CONFIG.accessTokenCookieName);
+          Cookies.remove(APP_CONFIG.refreshTokenCookieName);
+        }
+      },
 
       register: async (payload) => {
         set({ isLoading: true, error: null });
@@ -33,6 +65,59 @@ const useAuthStore = create<AuthStore>()(
           set({ isLoading: false });
         } catch (err) {
           const message = err instanceof AppError ? err.message : "Registration failed.";
+          set({ isLoading: false, error: message });
+          throw err;
+        }
+      },
+
+      resendOtp: async (payload) => {
+        set({ isLoading: true, error: null });
+        try {
+          await authService.resendOtp(payload);
+          set({ isLoading: false });
+        } catch (err) {
+          const message = err instanceof AppError ? err.message : "Failed to resend OTP.";
+          set({ isLoading: false, error: message });
+          throw err;
+        }
+      },
+
+      resetPassword: async (payload) => {
+        set({ isLoading: true, error: null });
+        try {
+          await authService.resetPassword(payload);
+          set({ isLoading: false });
+        } catch (err) {
+          const message = err instanceof AppError ? err.message : "Failed to send OTP.";
+          set({ isLoading: false, error: message });
+          throw err;
+        }
+      },
+
+      verifyOtp: async (payload) => {
+        set({ isLoading: true, error: null });
+        try {
+          const res = await authService.verifyOtp(payload);
+          Cookies.set(APP_CONFIG.accessTokenCookieName, res.data.access_token, { sameSite: "lax" });
+          Cookies.set(APP_CONFIG.refreshTokenCookieName, res.data.refresh_token, { sameSite: "lax" });
+          Cookies.remove(APP_CONFIG.otpPendingCookieName);
+          set({ isLoading: false });
+        } catch (err) {
+          const message = err instanceof AppError ? err.message : "OTP verification failed.";
+          set({ isLoading: false, error: message });
+          throw err;
+        }
+      },
+
+      verifyResetOtp: async (payload) => {
+        set({ isLoading: true, error: null });
+        try {
+          await authService.verifyResetOtp(payload);
+          Cookies.remove(APP_CONFIG.otpPendingCookieName);
+          Cookies.remove(APP_CONFIG.resetOtpCookieName);
+          set({ isLoading: false });
+        } catch (err) {
+          const message = err instanceof AppError ? err.message : "Failed to reset password.";
           set({ isLoading: false, error: message });
           throw err;
         }

@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { MdErrorOutline } from "react-icons/md";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -21,7 +22,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   const router = useRouter();
   const isSignUp = pathname === "/app/auth/sign-up";
 
-  const { register, isLoading, error, clearError } = useAuth();
+  const { login, register, isLoading, error, clearError } = useAuth();
 
   const [password, setPassword] = useState("");
   const [passwordTouched, setPasswordTouched] = useState(false);
@@ -57,14 +58,18 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     if (isSignUp) {
       try {
         await register({ email, password });
-        Cookies.set(APP_CONFIG.otpPendingCookieName, "1", { sameSite: "lax" });
+        Cookies.set(APP_CONFIG.otpPendingCookieName, email, { sameSite: "lax" });
         router.push(APP_ROUTES.AUTH.VERIFY_OTP);
       } catch {
         // error shown from store
       }
     } else {
-      // sign-in — TODO
-      router.push(APP_ROUTES.APP.HOME);
+      try {
+        await login({ email, password });
+        router.push(APP_ROUTES.APP.HOME);
+      } catch {
+        // error shown from store
+      }
     }
   };
 
@@ -169,6 +174,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 name="password"
                 autoComplete={isSignUp ? "new-password" : "current-password"}
                 onFocus={() => setPasswordTouched(true)}
+                onPaste={() => setPasswordTouched(true)}
                 onChange={(e) => setPassword(e.target.value)}
                 className="h-11 rounded-xl text-sm font-medium font-montserrat"
               />
@@ -193,7 +199,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <Button type="submit" size="xl" className="my-1 w-full" disabled={isSubmitDisabled}>
               {isLoading ? (
                 <span className="flex items-center gap-2">
-                  <span className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                  <Spinner />
                   {isSignUp ? "Signing up…" : "Signing in…"}
                 </span>
               ) : (
