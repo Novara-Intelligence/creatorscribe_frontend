@@ -9,6 +9,8 @@ interface PanelStore {
   pendingFiles: File[];
   addPendingFiles: (files: File[]) => void;
   clearPendingFiles: () => void;
+  draggedFile: File | null;
+  setDraggedFile: (file: File | null) => void;
 }
 
 const usePanelStore = create<PanelStore>((set) => ({
@@ -18,6 +20,8 @@ const usePanelStore = create<PanelStore>((set) => ({
   pendingFiles: [],
   addPendingFiles: (files) => set((s) => ({ activePanel: "uploads", pendingFiles: [...s.pendingFiles, ...files] })),
   clearPendingFiles: () => set({ pendingFiles: [] }),
+  draggedFile: null,
+  setDraggedFile: (file) => set({ draggedFile: file }),
 }));
 
 export default usePanelStore;

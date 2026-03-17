@@ -63,6 +63,7 @@ function FileThumb({
   const [hovered, setHovered] = useState(false);
   const [checked, setChecked] = useState(false);
   const isVideo = file.type.startsWith("video/");
+  const setDraggedFile = usePanelStore((s) => s.setDraggedFile);
 
   useEffect(() => {
     const objectUrl = URL.createObjectURL(file);
@@ -73,7 +74,23 @@ function FileThumb({
   return (
     <div
       style={{ flex: aspectRatio, height, minWidth: 0 }}
-      className="relative overflow-hidden rounded-md bg-muted cursor-pointer shrink-0"
+      className="relative overflow-hidden rounded-md bg-muted cursor-grab active:cursor-grabbing shrink-0"
+      draggable
+      onDragStart={(e) => {
+        setDraggedFile(file);
+        if (url) {
+          const ghost = document.createElement("div");
+          ghost.style.cssText = "position:fixed;top:-1000px;width:80px;height:60px;overflow:hidden;border-radius:6px;";
+          const img = document.createElement(isVideo ? "video" : "img");
+          (img as HTMLImageElement).src = url;
+          img.style.cssText = "width:100%;height:100%;object-fit:cover;";
+          ghost.appendChild(img);
+          document.body.appendChild(ghost);
+          e.dataTransfer.setDragImage(ghost, 40, 30);
+          setTimeout(() => document.body.removeChild(ghost), 0);
+        }
+      }}
+      onDragEnd={() => setDraggedFile(null)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -185,7 +202,7 @@ export function UploadPanel() {
 
   return (
     <aside
-      className={`relative flex flex-col border-r bg-background transition-all duration-300 ease-in-out overflow-hidden shrink-0 h-full ${open ? "w-72 opacity-100" : "w-0 opacity-0"}`}
+      className={`relative flex flex-col border-r bg-background transition-all duration-300 ease-in-out overflow-hidden shrink-0 h-full ${open ? "w-80 opacity-100" : "w-0 opacity-0"}`}
       onDragEnter={(e) => { e.preventDefault(); dragCounter.current++; if (dragCounter.current === 1) setDraggingOver(true); }}
       onDragLeave={() => { dragCounter.current--; if (dragCounter.current === 0) setDraggingOver(false); }}
       onDragOver={(e) => e.preventDefault()}
@@ -203,7 +220,7 @@ export function UploadPanel() {
         </div>
       )}
 
-      <div className="flex flex-col h-full w-72">
+      <div className="flex flex-col h-full w-80">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
           <span className="font-semibold text-sm">Uploads</span>
@@ -226,7 +243,7 @@ export function UploadPanel() {
           <Button
             onClick={() => inputRef.current?.click()}
             variant="default"
-            className="h-8 text-xs font-montserrat bg-[#1869db]"
+            className="h-8 text-xs font-montserrat bg-[#1869db] dark:text-foreground"
           >
             <Upload01Icon className="size-3.5" strokeWidth={1.5} />
             Upload files
@@ -254,7 +271,7 @@ export function UploadPanel() {
           ) : (
             <>
               <div className="shrink-0 py-0.5">
-                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                <span className="text-[11px] font-montserrat font-semibold text-muted-foreground uppercase tracking-wide">
                   {filteredFiles.length} file{filteredFiles.length !== 1 ? "s" : ""}
                 </span>
               </div>
