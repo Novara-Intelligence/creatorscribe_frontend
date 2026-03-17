@@ -37,7 +37,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   });
 
   const handleFacebookLogin = () => {
-    const callbackUrl = `${window.location.origin}/app/auth/facebook/callback`;
+    const callbackUrl = `${window.location.origin}/auth/facebook/callback`;
     const params = new URLSearchParams({
       client_id: FACEBOOK_APP_ID,
       redirect_uri: callbackUrl,

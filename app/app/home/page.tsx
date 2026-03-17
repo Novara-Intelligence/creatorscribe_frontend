@@ -21,7 +21,7 @@ export default function HomePage() {
   const firstName = "there";
 
   return (
-    <div className="flex flex-col flex-1 px-4 py-4 group-data-[collapsible=icon]:px-26 group-data-[collapsible=icon]:py-20 h-full transition-all duration-300 ease-in-out">
+    <div className="flex flex-col flex-1 px-4 py-4 group-data-[collapsible=icon]:py-20 group-data-[collapsible=icon]:px-26 h-full transition-all duration-200 ease-linear">
       <header className="flex items-center justify-between w-full">
         <button className="flex items-center gap-2.5 pl-1.5 pr-3 py-1.5 rounded-full border border-gray-200 bg-white hover:bg-gray-50 transition-colors dark:bg-zinc-900 dark:border-zinc-700 dark:hover:bg-zinc-800">
           <span className="bg-[#24292f] text-white text-xs font-medium px-2 py-1 rounded-full dark:bg-zinc-100 dark:text-zinc-900">

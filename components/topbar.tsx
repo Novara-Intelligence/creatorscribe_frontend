@@ -21,6 +21,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { APP_ROUTES } from "@/constants/routes";
 import useClientStore from "@/store/clientStore";
+import useUserStore from "@/store/userStore";
+import { useEffect } from "react";
+import { Badge } from "./ui/badge";
 
 export function Topbar({ progress = 0 }: { progress?: number }) {
   const { theme, setTheme } = useTheme();
@@ -30,6 +33,17 @@ export function Topbar({ progress = 0 }: { progress?: number }) {
   const activeClientId = useClientStore((s) => s.activeClientId);
   const setActiveClientId = useClientStore((s) => s.setActiveClientId);
   const activeClient = clients.find((c) => c.id === activeClientId) ?? clients[0];
+
+  const profile = useUserStore((s) => s.profile);
+  const fetchProfile = useUserStore((s) => s.fetchProfile);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  const initials = profile?.full_name
+    ? profile.full_name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
+    : "CS";
 
   const handleLogout = async () => {
     await logout();
@@ -67,7 +81,8 @@ export function Topbar({ progress = 0 }: { progress?: number }) {
               />
             </svg>
             <Avatar className="absolute inset-[3px] size-auto after:hidden m-0.5 group-hover/avatar:opacity-0 transition-opacity">
-              <AvatarFallback>CS</AvatarFallback>
+              {profile?.profile_pic && <AvatarImage src={profile.profile_pic} />}
+              <AvatarFallback className="text-xs font-semibold font-montserrat">{initials}</AvatarFallback>
             </Avatar>
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity">
               <span className="font-montserrat text-primary text-[9px] font-semibold leading-none">
@@ -80,17 +95,18 @@ export function Topbar({ progress = 0 }: { progress?: number }) {
             <DropdownMenuGroup className="bg-background border border-border rounded-lg mb-1 overflow-hidden">
               <DropdownMenuItem className="px-3 py-2.5 flex items-center gap-2.5 rounded-none border-b" onClick={() => router.push(APP_ROUTES.SETTINGS.PROFILE)}>
                 <Avatar className="size-7 shrink-0">
-                  <AvatarFallback className="text-xs font-semibold font-montserrat">CS</AvatarFallback>
+                  {profile?.profile_pic && <AvatarImage src={profile.profile_pic} />}
+                  <AvatarFallback className="text-xs font-semibold font-montserrat">{initials}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col overflow-hidden">
-                  <span className="text-xs font-semibold font-montserrat truncate">Profile</span>
-                  <span className="text-[11px] text-muted-foreground font-montserrat truncate">Manage your account</span>
+                  <span className="text-xs font-semibold font-montserrat truncate">{profile?.full_name ?? "Profile"}</span>
+                  <span className="text-[11px] text-muted-foreground font-montserrat truncate">{profile?.email ?? "Manage your account"}</span>
                 </div>
               </DropdownMenuItem>
               <div className="px-2 py-1.5 flex flex-col gap-0.5">
                 <div className="flex items-center justify-between px-1 mb-0.5">
                   <span className="text-[10px] font-semibold text-muted-foreground font-montserrat uppercase tracking-wide">Clients</span>
-                  <DropdownMenuItem className="h-5 w-5 p-0 flex items-center justify-center rounded-md cursor-pointer">
+                  <DropdownMenuItem onClick={() => router.push(APP_ROUTES.SETTINGS.CLIENTS)} className="h-5 w-5 p-0 flex items-center justify-center rounded-md cursor-pointer">
                     <Plus className="size-3" />
                   </DropdownMenuItem>
                 </div>
@@ -127,9 +143,18 @@ export function Topbar({ progress = 0 }: { progress?: number }) {
                         />
                       </svg>
                     </div>
-                    <span className="font-montserrat text-xs font-semibold">Balance</span>
+                    <span className="font-montserrat text-xs font-semibold capitalize">Balance</span>
                   </div>
-                  <Button size="xs" className="font-montserrat text-xs !py-2">Upgrade</Button>
+                  {
+                    profile?.current_plan === "free" && (
+                      <Button size="xs" className="font-montserrat text-xs !py-2"> Upgrade</Button>
+                    )
+                  }
+                  {
+                    profile?.current_plan !== "free" && (
+                      <Badge variant="outline" className="font-montserrat !text-[8px]">{profile?.days_left} days left</Badge>
+                    )
+                  }
                 </div>
                 <div className="flex flex-col gap-1">
                   {/* Row 2: Total */}

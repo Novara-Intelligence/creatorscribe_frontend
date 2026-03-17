@@ -45,3 +45,7 @@ export interface VerifyOtpResponse {
     refresh_token: string;
   };
 }
+
+export interface RefreshTokenPayload {
+  refresh_token: string;
+}

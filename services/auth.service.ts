@@ -1,5 +1,5 @@
 import axiosInstance from "@/lib/axios";
-import type { LoginPayload, OAuthSignInPayload, RegisterPayload, ResetPasswordPayload, VerifyOtpPayload, VerifyOtpResponse, VerifyResetOtpPayload, VerifyResetOtpResponse } from "@/types/auth";
+import type { LoginPayload, OAuthSignInPayload, RefreshTokenPayload, RegisterPayload, ResetPasswordPayload, VerifyOtpPayload, VerifyOtpResponse, VerifyResetOtpPayload, VerifyResetOtpResponse } from "@/types/auth";
 
 const authService = {
   async oauthSignIn(payload: OAuthSignInPayload): Promise<VerifyOtpResponse> {
@@ -39,6 +39,11 @@ const authService = {
 
   async verifyResetOtp(payload: VerifyResetOtpPayload): Promise<VerifyResetOtpResponse> {
     const { data } = await axiosInstance.post<VerifyResetOtpResponse>("/auth/verify-password-reset", payload);
+    return data;
+  },
+
+  async refreshToken(payload: RefreshTokenPayload): Promise<VerifyOtpResponse> {
+    const { data } = await axiosInstance.post<VerifyOtpResponse>("auth/refresh-token", payload);
     return data;
   },
 };

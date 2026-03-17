@@ -13,7 +13,7 @@ export function middleware(request: NextRequest) {
   const isAuthRoute = AUTH_ROUTES.includes(pathname);
 
   // OAuth callback pages — always allow through
-  if (pathname.startsWith("/app/auth/facebook/callback")) {
+  if (pathname.startsWith("/auth/facebook/callback") || pathname.startsWith("/app/auth/facebook/callback")) {
     return NextResponse.next();
   }
 
