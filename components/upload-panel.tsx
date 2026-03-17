@@ -6,6 +6,7 @@ import { Cancel01Icon, Upload01Icon, Search01Icon } from "hugeicons-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "./ui/button";
 
 const GAP = 4;
 const TARGET_HEIGHT = 110;
@@ -222,13 +223,14 @@ export function UploadPanel() {
               className="pl-8 h-8 text-xs font-montserrat"
             />
           </div>
-          <button
+          <Button
             onClick={() => inputRef.current?.click()}
-            className="flex items-center justify-center gap-2 w-full h-8 rounded-lg border border-dashed border-border hover:border-primary/50 hover:bg-muted/40 transition-colors text-xs font-medium text-muted-foreground"
+            variant="default"
+            className="h-8 text-xs font-montserrat bg-[#1869db]"
           >
             <Upload01Icon className="size-3.5" strokeWidth={1.5} />
             Upload files
-          </button>
+          </Button>
           <input
             ref={inputRef}
             type="file"
