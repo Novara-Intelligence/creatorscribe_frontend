@@ -11,8 +11,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <SidebarProvider defaultOpen={sidebarOpen}>
       <AppSidebar />
-      <div className="flex flex-1 flex-col min-h-screen overflow-hidden">
-        <div className="sticky top-0 z-10">
+      <div className="flex flex-1 flex-col h-screen overflow-hidden">
+        <div className="shrink-0">
           <Topbar />
         </div>
         <div className="flex flex-1 overflow-hidden">

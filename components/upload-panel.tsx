@@ -8,10 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const GAP = 4;
-const TARGET_HEIGHT = 110; // minimum row height
+const TARGET_HEIGHT = 110;
 
-// Justified row layout: groups items into rows where each row fills container width exactly.
-// Row height = (containerWidth - gaps) / sum(aspectRatios in row)
 function computeRows(
   items: { aspectRatio: number }[],
   containerWidth: number
@@ -28,20 +26,16 @@ function computeRows(
     const gaps = (rowIndices.length - 1) * GAP;
     const rowHeight = (containerWidth - gaps) / arSum;
 
-    // If adding this item makes the row shorter than TARGET_HEIGHT, close the previous row
     if (rowHeight < TARGET_HEIGHT && rowIndices.length > 1) {
-      // Remove last item, close row without it
       rowIndices.pop();
       arSum -= ar;
       const prevGaps = (rowIndices.length - 1) * GAP;
       rows.push({ indices: [...rowIndices], height: (containerWidth - prevGaps) / arSum });
-      // Start new row with current item
       rowIndices = [i];
       arSum = ar;
     }
   }
 
-  // Last row — don't stretch, cap at TARGET_HEIGHT
   if (rowIndices.length > 0) {
     const gaps = (rowIndices.length - 1) * GAP;
     const height = Math.min((containerWidth - gaps) / arSum, TARGET_HEIGHT);
@@ -53,22 +47,27 @@ function computeRows(
 
 function FileThumb({
   file,
-  url,
   height,
   aspectRatio,
   onAspectRatio,
   onRemove,
 }: {
   file: File;
-  url: string;
   height: number;
   aspectRatio: number;
   onAspectRatio: (r: number) => void;
   onRemove: () => void;
 }) {
+  const [url, setUrl] = useState<string | null>(null);
   const [hovered, setHovered] = useState(false);
   const [checked, setChecked] = useState(false);
   const isVideo = file.type.startsWith("video/");
+
+  useEffect(() => {
+    const objectUrl = URL.createObjectURL(file);
+    setUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [file]);
 
   return (
     <div
@@ -77,7 +76,7 @@ function FileThumb({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {isVideo ? (
+      {url && (isVideo ? (
         <video
           src={url}
           className="w-full h-full object-cover"
@@ -96,7 +95,7 @@ function FileThumb({
             if (img.naturalWidth && img.naturalHeight) onAspectRatio(img.naturalWidth / img.naturalHeight);
           }}
         />
-      )}
+      ))}
 
       {(hovered || checked) && <div className="absolute inset-0 bg-black/20" />}
 
@@ -141,13 +140,10 @@ export function UploadPanel() {
   const open = activePanel === "uploads";
   const [draggingOver, setDraggingOver] = useState(false);
   const [search, setSearch] = useState("");
+  const [aspectRatios, setAspectRatios] = useState<Record<string, number>>({});
+  const [containerWidth, setContainerWidth] = useState(240);
   const dragCounter = useRef(0);
 
-  // Per-file state: url + aspect ratio, keyed by file identity
-  const [fileData, setFileData] = useState<Record<string, { url: string; aspectRatio: number }>>({});
-  const [containerWidth, setContainerWidth] = useState(240);
-
-  // Track container width
   useEffect(() => {
     if (!gridRef.current) return;
     const observer = new ResizeObserver((entries) => {
@@ -155,33 +151,11 @@ export function UploadPanel() {
     });
     observer.observe(gridRef.current);
     return () => observer.disconnect();
+  }, [open]); // re-attach when panel opens
+
+  const handleAspectRatio = useCallback((key: string, ratio: number) => {
+    setAspectRatios((prev) => ({ ...prev, [key]: ratio }));
   }, []);
-
-  // Create/revoke blob URLs as pendingFiles changes
-  useEffect(() => {
-    const keys = new Set(pendingFiles.map((f) => `${f.name}-${f.size}-${f.lastModified}`));
-    setFileData((prev) => {
-      const next: typeof prev = {};
-      for (const f of pendingFiles) {
-        const key = `${f.name}-${f.size}-${f.lastModified}`;
-        if (prev[key]) {
-          next[key] = prev[key];
-        } else {
-          next[key] = { url: URL.createObjectURL(f), aspectRatio: 1 };
-        }
-      }
-      // Revoke removed
-      for (const [k, v] of Object.entries(prev)) {
-        if (!keys.has(k)) URL.revokeObjectURL(v.url);
-      }
-      return next;
-    });
-  }, [pendingFiles]);
-
-  // Cleanup on unmount
-  useEffect(() => () => {
-    Object.values(fileData).forEach((d) => URL.revokeObjectURL(d.url));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFiles = (files: File[]) => {
     const filtered = files.filter((f) => f.type.startsWith("image/") || f.type.startsWith("video/"));
@@ -194,24 +168,23 @@ export function UploadPanel() {
     if (updated.length > 0) addPendingFiles(updated);
   };
 
-  const setAspectRatio = useCallback((key: string, ratio: number) => {
-    setFileData((prev) => prev[key] ? { ...prev, [key]: { ...prev[key], aspectRatio: ratio } } : prev);
-  }, []);
-
   const filteredFiles = pendingFiles.filter((f) =>
     f.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const items = filteredFiles.map((f) => {
-    const key = `${f.name}-${f.size}-${f.lastModified}`;
-    return { file: f, key, ...(fileData[key] ?? { url: "", aspectRatio: 1 }) };
-  });
+  const fileKey = (f: File) => `${f.name}-${f.size}-${f.lastModified}`;
+
+  const items = filteredFiles.map((f) => ({
+    file: f,
+    key: fileKey(f),
+    aspectRatio: aspectRatios[fileKey(f)] ?? 1,
+  }));
 
   const rows = computeRows(items, containerWidth);
 
   return (
     <aside
-      className={`relative flex flex-col border-r bg-background transition-all duration-300 ease-in-out overflow-hidden shrink-0 ${open ? "w-72 opacity-100" : "w-0 opacity-0"}`}
+      className={`relative flex flex-col border-r bg-background transition-all duration-300 ease-in-out overflow-hidden shrink-0 h-full ${open ? "w-72 opacity-100" : "w-0 opacity-0"}`}
       onDragEnter={(e) => { e.preventDefault(); dragCounter.current++; if (dragCounter.current === 1) setDraggingOver(true); }}
       onDragLeave={() => { dragCounter.current--; if (dragCounter.current === 0) setDraggingOver(false); }}
       onDragOver={(e) => e.preventDefault()}
@@ -230,6 +203,7 @@ export function UploadPanel() {
       )}
 
       <div className="flex flex-col h-full w-72">
+        {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
           <span className="font-semibold text-sm">Uploads</span>
           <button onClick={closePanel} className="text-muted-foreground hover:text-foreground transition-colors">
@@ -237,7 +211,8 @@ export function UploadPanel() {
           </button>
         </div>
 
-        <div className="px-3 pt-3 shrink-0">
+        {/* Search + Upload button — fixed */}
+        <div className="px-3 pt-3 pb-2 flex flex-col gap-2 shrink-0">
           <div className="relative">
             <Search01Icon className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" strokeWidth={1.5} />
             <Input
@@ -247,71 +222,60 @@ export function UploadPanel() {
               className="pl-8 h-8 text-xs font-montserrat"
             />
           </div>
+          <button
+            onClick={() => inputRef.current?.click()}
+            className="flex items-center justify-center gap-2 w-full h-8 rounded-lg border border-dashed border-border hover:border-primary/50 hover:bg-muted/40 transition-colors text-xs font-medium text-muted-foreground"
+          >
+            <Upload01Icon className="size-3.5" strokeWidth={1.5} />
+            Upload files
+          </button>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*,video/*"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              const files = Array.from(e.target.files ?? []);
+              if (files.length > 0) addPendingFiles(files);
+              e.target.value = "";
+            }}
+          />
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
-          {/* Drop zone */}
-          <div
-            className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/40 transition-colors cursor-pointer py-6 px-4 shrink-0"
-            onClick={() => inputRef.current?.click()}
-          >
-            <Upload01Icon className="size-5 text-muted-foreground" strokeWidth={1.5} />
-            <div className="text-center">
-              <p className="text-xs font-semibold">Click or drag to upload</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Images & videos</p>
-            </div>
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/*,video/*"
-              multiple
-              className="hidden"
-              onChange={(e) => {
-                const files = Array.from(e.target.files ?? []);
-                if (files.length > 0) addPendingFiles(files);
-                e.target.value = "";
-              }}
-            />
-          </div>
-
-          {/* File grid */}
-          {pendingFiles.length > 0 && (
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
+        {/* Scrollable file grid only */}
+        <div className="flex-1 overflow-y-auto scrollbar-hide px-3 pb-3 flex flex-col gap-1.5">
+          {pendingFiles.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-6">No uploads yet.</p>
+          ) : filteredFiles.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-4">No files match your search.</p>
+          ) : (
+            <>
+              <div className="shrink-0 py-0.5">
                 <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
                   {filteredFiles.length} file{filteredFiles.length !== 1 ? "s" : ""}
                 </span>
-                <button onClick={clearPendingFiles} className="text-[11px] text-muted-foreground hover:text-destructive transition-colors">
-                  Clear all
-                </button>
               </div>
-              {filteredFiles.length === 0
-                ? <p className="text-xs text-muted-foreground text-center py-4">No files match your search.</p>
-                : (
-                  <div ref={gridRef} className="flex flex-col gap-1">
-                    {rows.map((row, ri) => (
-                      <div key={ri} className="flex gap-1">
-                        {row.indices.map((idx) => {
-                          const item = items[idx];
-                          if (!item?.url) return null;
-                          return (
-                            <FileThumb
-                              key={item.key}
-                              file={item.file}
-                              url={item.url}
-                              height={row.height}
-                              aspectRatio={item.aspectRatio}
-                              onAspectRatio={(r) => setAspectRatio(item.key, r)}
-                              onRemove={() => removeFile(pendingFiles.indexOf(item.file))}
-                            />
-                          );
-                        })}
-                      </div>
-                    ))}
+              <div ref={gridRef} className="flex flex-col gap-1">
+                {rows.map((row, ri) => (
+                  <div key={ri} className="flex gap-1">
+                    {row.indices.map((idx) => {
+                      const item = items[idx];
+                      return (
+                        <FileThumb
+                          key={item.key}
+                          file={item.file}
+                          height={row.height}
+                          aspectRatio={item.aspectRatio}
+                          onAspectRatio={(r) => handleAspectRatio(item.key, r)}
+                          onRemove={() => removeFile(pendingFiles.indexOf(item.file))}
+                        />
+                      );
+                    })}
                   </div>
-                )
-              }
-            </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
