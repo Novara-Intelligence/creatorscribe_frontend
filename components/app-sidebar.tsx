@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Analytics01Icon, Calendar03Icon, HelpSquareIcon, Home04Icon, PuzzleIcon, Tag01Icon } from "hugeicons-react";
+import { Analytics01Icon, Calendar03Icon, HelpSquareIcon, Home04Icon, PuzzleIcon, Tag01Icon, Upload01Icon } from "hugeicons-react";
 import {
   Sidebar,
   SidebarHeader,
@@ -13,6 +14,7 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import { ClientSwitcher } from "@/components/client-switcher";
+import usePanelStore from "@/store/panelStore";
 
 const navItems = [
   { label: "Home", icon: Home04Icon, href: "/app/home" },
@@ -33,6 +35,10 @@ const navFooterItems = [{
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const activePanel = usePanelStore((s) => s.activePanel);
+  const togglePanel = usePanelStore((s) => s.togglePanel);
+  const uploadsActive = activePanel === "uploads";
+
   return (
     <Sidebar collapsible="icon" className="border-r">
       <SidebarHeader className="px-3">
@@ -49,12 +55,22 @@ export function AppSidebar() {
         <SidebarMenu className="px-3">
           {navItems.map((item) => (
             <SidebarMenuItem key={item.label} className="py-1 flex items-center justify-center">
-              <SidebarMenuButton render={<a href={item.href} />} isActive={pathname === item.href} className="px-2 !py-4 rounded-lg group-data-[collapsible=icon]:justify-center data-[active]:bg-gray-200 dark:data-[active]:bg-secondary text-muted-foreground data-[active]:text-primary">
+              <SidebarMenuButton render={<Link href={item.href} />} isActive={pathname === item.href} className="px-2 !py-4 rounded-lg group-data-[collapsible=icon]:justify-center data-[active]:bg-gray-200 dark:data-[active]:bg-secondary text-muted-foreground data-[active]:text-primary">
                 <item.icon className="shrink-0 !size-4.5" strokeWidth={1.9} />
                 <span className="font-raleway mt-0.5 text-sm font-semibold leading-none group-data-[collapsible=icon]:hidden">{item.label}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
+          <SidebarMenuItem className="py-1 flex items-center justify-center">
+            <SidebarMenuButton
+              onClick={() => togglePanel("uploads")}
+              isActive={uploadsActive}
+              className="px-2 !py-4 rounded-lg group-data-[collapsible=icon]:justify-center data-[active]:bg-gray-200 dark:data-[active]:bg-secondary text-muted-foreground data-[active]:text-primary cursor-pointer"
+            >
+              <Upload01Icon className="shrink-0 !size-4.5" strokeWidth={1.9} />
+              <span className="font-raleway mt-0.5 text-sm font-semibold leading-none group-data-[collapsible=icon]:hidden">Uploads</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
 
@@ -62,7 +78,7 @@ export function AppSidebar() {
         <SidebarMenu>
           {navFooterItems.map((item) => (
             <SidebarMenuItem key={item.label} className="py-1 flex items-center justify-center">
-              <SidebarMenuButton render={<a href={item.href} />} isActive={pathname === item.href} className="px-2 !py-4 rounded-lg group-data-[collapsible=icon]:justify-center data-[active]:bg-gray-200 dark:data-[active]:bg-secondary text-muted-foreground data-[active]:text-primary">
+              <SidebarMenuButton render={<Link href={item.href} />} isActive={pathname === item.href} className="px-2 !py-4 rounded-lg group-data-[collapsible=icon]:justify-center data-[active]:bg-gray-200 dark:data-[active]:bg-secondary text-muted-foreground data-[active]:text-primary">
                 <item.icon className="shrink-0 !size-4.5" strokeWidth={1.9} />
                 <span className="font-raleway mt-0.5 text-sm font-semibold leading-none group-data-[collapsible=icon]:hidden">{item.label}</span>
               </SidebarMenuButton>

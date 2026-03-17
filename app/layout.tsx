@@ -6,6 +6,7 @@ import { ThemeFavicon } from "@/components/theme-favicon";
 import { AuthInitializer } from "@/components/providers/AuthInitializer";
 import { GoogleProvider } from "@/components/providers/GoogleProvider";
 import { FacebookProvider } from "@/components/providers/FacebookProvider";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -56,6 +57,7 @@ export default function RootLayout({
               <FacebookProvider>
                 <AuthInitializer>
                   {children}
+                  <Toaster position="bottom-right" />
                 </AuthInitializer>
               </FacebookProvider>
             </GoogleProvider>

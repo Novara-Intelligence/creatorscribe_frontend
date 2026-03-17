@@ -7,6 +7,13 @@ const userService = {
     return data;
   },
 
+  async checkUser(email: string, clientId?: number): Promise<{ found: boolean; email?: string; full_name?: string; profile_pic?: string; already_in_client?: boolean | null; message?: string }> {
+    const params: Record<string, unknown> = { email };
+    if (clientId !== undefined) params.client_id = clientId;
+    const { data } = await axiosInstance.get("auth/check-user", { params });
+    return data;
+  },
+
   async updateProfile(payload: { full_name?: string; profile_pic?: File | null }): Promise<{ success: boolean; message: string; data: UserProfile }> {
     const formData = new FormData();
     if (payload.full_name !== undefined) formData.append("full_name", payload.full_name);

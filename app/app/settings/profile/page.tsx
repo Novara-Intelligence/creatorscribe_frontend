@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import { toast } from "sonner";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -136,6 +138,7 @@ export default function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const profile = useUserStore((s) => s.profile);
   const fetchProfile = useUserStore((s) => s.fetchProfile);
@@ -147,11 +150,21 @@ export default function ProfilePage() {
 
   const handleAvatarSelect = async (file: File) => {
     setAvatarUrl(URL.createObjectURL(file));
-    await updateProfile({ profile_pic: file });
+    try {
+      await updateProfile({ profile_pic: file });
+      toast.success("Profile picture updated");
+    } catch {
+      toast.error("Failed to update profile picture");
+    }
   };
 
   const handleNameUpdate = async (name: string) => {
-    await updateProfile({ full_name: name });
+    try {
+      await updateProfile({ full_name: name });
+      toast.success("Name updated", { description: `Your name has been changed to ${name}.` });
+    } catch {
+      toast.error("Failed to update name");
+    }
   };
 
   return (
@@ -196,7 +209,7 @@ export default function ProfilePage() {
             Permanently delete your entire account across all workspaces. You will no longer be able to create a CreatorScribe account with this email. If you only want to leave a client, go to the Clients tab.
           </span>
         </div>
-        <Button variant="outline" size="lg" className="font-semibold shrink-0 text-destructive border-destructive hover:bg-destructive/5 hover:text-destructive transition-colors">
+        <Button variant="outline" size="lg" className="font-semibold shrink-0 text-destructive border-destructive hover:bg-destructive/5 hover:text-destructive transition-colors" onClick={() => setDeleteOpen(true)}>
           Delete Account
         </Button>
       </div>
@@ -210,6 +223,17 @@ export default function ProfilePage() {
         open={nameDialogOpen}
         onClose={() => setNameDialogOpen(false)}
         onUpdate={handleNameUpdate}
+      />
+      <ConfirmDeleteDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={async () => {
+          toast.success("Account deleted");
+        }}
+        title="Delete Entire Account"
+        description="Permanently delete your account across all workspaces. This cannot be undone."
+        confirmWord="delete"
+        confirmLabel="Delete"
       />
     </div >
   );
