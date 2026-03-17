@@ -13,6 +13,7 @@ interface UserState {
 
 interface UserActions {
   fetchProfile: () => Promise<void>;
+  updateProfile: (payload: { full_name?: string; profile_pic?: File | null }) => Promise<void>;
   clearProfile: () => void;
 }
 
@@ -33,6 +34,16 @@ const useUserStore = create<UserStore>()(
           set({ profile: res.data, isLoading: false });
         } catch {
           set({ isLoading: false, error: "Failed to load profile." });
+        }
+      },
+
+      updateProfile: async (payload) => {
+        set({ isLoading: true, error: null });
+        try {
+          const res = await userService.updateProfile(payload);
+          set({ profile: res.data, isLoading: false });
+        } catch {
+          set({ isLoading: false, error: "Failed to update profile." });
         }
       },
 

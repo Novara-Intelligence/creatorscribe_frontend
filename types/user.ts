@@ -4,4 +4,6 @@ export interface UserProfile {
   full_name: string;
   current_plan: string;
   days_left: number | null;
+  total_tokens: number | null;
+  remaining_tokens: number | null;
 }

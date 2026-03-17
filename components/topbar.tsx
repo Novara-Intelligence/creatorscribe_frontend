@@ -25,7 +25,7 @@ import useUserStore from "@/store/userStore";
 import { useEffect } from "react";
 import { Badge } from "./ui/badge";
 
-export function Topbar({ progress = 0 }: { progress?: number }) {
+export function Topbar() {
   const { theme, setTheme } = useTheme();
   const { logout } = useAuth();
   const router = useRouter();
@@ -36,6 +36,11 @@ export function Topbar({ progress = 0 }: { progress?: number }) {
 
   const profile = useUserStore((s) => s.profile);
   const fetchProfile = useUserStore((s) => s.fetchProfile);
+
+  const progress =
+    profile?.total_tokens != null && profile.total_tokens > 0
+      ? Math.min((profile.total_tokens - (profile.remaining_tokens ?? 0)) / profile.total_tokens, 1)
+      : 0;
 
   useEffect(() => {
     fetchProfile();
@@ -160,12 +165,16 @@ export function Topbar({ progress = 0 }: { progress?: number }) {
                   {/* Row 2: Total */}
                   <div className="flex items-center justify-between">
                     <span className="font-montserrat text-xs text-muted-foreground">Total</span>
-                    <span className="font-montserrat text-xs font-medium">— credits</span>
+                    <span className="font-montserrat text-xs font-medium">
+                      {profile?.total_tokens != null ? `${profile.total_tokens.toLocaleString()} tokens` : "Unlimited"}
+                    </span>
                   </div>
                   {/* Row 3: Remaining */}
                   <div className="flex items-center justify-between">
                     <span className="font-montserrat text-xs text-muted-foreground">Remaining</span>
-                    <span className="font-montserrat text-xs font-medium">—</span>
+                    <span className="font-montserrat text-xs font-medium">
+                      {profile?.remaining_tokens != null ? profile.remaining_tokens.toLocaleString() : "Unlimited"}
+                    </span>
                   </div>
                 </div>
               </div>

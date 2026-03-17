@@ -47,15 +47,14 @@ function AvatarPickerDialog({
 }: {
   open: boolean;
   onClose: () => void;
-  onSelect: (url: string) => void;
+  onSelect: (file: File) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
 
   const handleFile = (file: File) => {
     if (!file.type.startsWith("image/")) return;
-    const url = URL.createObjectURL(file);
-    onSelect(url);
+    onSelect(file);
     onClose();
   };
 
@@ -101,10 +100,11 @@ function AvatarPickerDialog({
   );
 }
 
-function UpdateNameDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+function UpdateNameDialog({ open, onClose, onUpdate }: { open: boolean; onClose: () => void; onUpdate: (name: string) => void }) {
   const [name, setName] = useState("");
 
   const handleClose = () => { setName(""); onClose(); };
+  const handleUpdate = () => { if (name.trim()) { onUpdate(name.trim()); handleClose(); } };
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
@@ -125,7 +125,7 @@ function UpdateNameDialog({ open, onClose }: { open: boolean; onClose: () => voi
         </div>
         <div className="flex justify-end gap-2 mt-4">
           <Button variant="outline" onClick={handleClose}>Cancel</Button>
-          <Button disabled={!name.trim()}>Update</Button>
+          <Button disabled={!name.trim()} onClick={handleUpdate}>Update</Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -139,10 +139,20 @@ export default function ProfilePage() {
 
   const profile = useUserStore((s) => s.profile);
   const fetchProfile = useUserStore((s) => s.fetchProfile);
+  const updateProfile = useUserStore((s) => s.updateProfile);
 
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
+
+  const handleAvatarSelect = async (file: File) => {
+    setAvatarUrl(URL.createObjectURL(file));
+    await updateProfile({ profile_pic: file });
+  };
+
+  const handleNameUpdate = async (name: string) => {
+    await updateProfile({ full_name: name });
+  };
 
   return (
     <div className="flex flex-col">
@@ -169,7 +179,13 @@ export default function ProfilePage() {
       <Separator className="bg-muted" />
       <SettingRow label="Given Name" value={profile?.full_name ?? "—"} action={{ label: "Update Given Name", onClick: () => setNameDialogOpen(true) }} />
       <Separator className="bg-muted" />
-      <SettingRow label="Current Plan" value={profile?.current_plan ? profile.current_plan.charAt(0).toUpperCase() + profile.current_plan.slice(1) + " Plan " + profile?.days_left + " days left" : "—"} action={{ label: "Manage Subscription" }} />
+      <SettingRow
+        label="Current Plan"
+        value={profile?.current_plan
+          ? profile.current_plan.charAt(0).toUpperCase() + profile.current_plan.slice(1) + " Plan" + (profile.current_plan !== "free" && profile.days_left != null ? ` · ${profile.days_left} days left` : "")
+          : "—"}
+        action={{ label: "Manage Subscription" }}
+      />
       <Separator className="bg-muted" />
       <SettingRow label="Usage & Credit Ceilings" action={{ label: "See Details" }} />
       <Separator className="bg-muted" />
@@ -188,11 +204,12 @@ export default function ProfilePage() {
       <AvatarPickerDialog
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
-        onSelect={(url) => setAvatarUrl(url)}
+        onSelect={handleAvatarSelect}
       />
       <UpdateNameDialog
         open={nameDialogOpen}
         onClose={() => setNameDialogOpen(false)}
+        onUpdate={handleNameUpdate}
       />
     </div >
   );
