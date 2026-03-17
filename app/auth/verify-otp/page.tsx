@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import Cookies from "js-cookie";
 import { MdErrorOutline } from "react-icons/md";
 import { APP_CONFIG } from "@/constants/config";
@@ -13,6 +13,14 @@ import { Spinner } from "@/components/ui/spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function VerifyOtpPage() {
+  return (
+    <Suspense>
+      <VerifyOtpContent />
+    </Suspense>
+  );
+}
+
+function VerifyOtpContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isResetFlow = searchParams.get("source") === "reset";

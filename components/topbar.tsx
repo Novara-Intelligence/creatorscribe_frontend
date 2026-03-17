@@ -150,16 +150,11 @@ export function Topbar() {
                     </div>
                     <span className="font-montserrat text-xs font-semibold capitalize">Balance</span>
                   </div>
-                  {
-                    profile?.current_plan === "free" && (
-                      <Button size="xs" className="font-montserrat text-xs !py-2"> Upgrade</Button>
-                    )
-                  }
-                  {
-                    profile?.current_plan !== "free" && (
-                      <Badge variant="outline" className="font-montserrat !text-[8px]">{profile?.days_left} days left</Badge>
-                    )
-                  }
+                  {profile && profile.current_plan !== "free" && profile.days_left != null ? (
+                    <Badge variant="outline" className="font-montserrat !text-[8px]">{profile.days_left} days left</Badge>
+                  ) : profile && profile.current_plan === "free" ? null : (
+                    <Button size="xs" className="font-montserrat text-xs !py-2">Upgrade</Button>
+                  )}
                 </div>
                 <div className="flex flex-col gap-1">
                   {/* Row 2: Total */}
