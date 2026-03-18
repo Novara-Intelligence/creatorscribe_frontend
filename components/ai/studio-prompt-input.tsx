@@ -63,6 +63,13 @@ function AttachmentsDisplay() {
   );
 }
 
+function SubmitButton({ status }: { status: "submitted" | "streaming" | "ready" | "error" }) {
+  const attachments = usePromptInputAttachments();
+  return (
+    <PromptInputSubmit status={status} disabled={attachments.files.length === 0} />
+  );
+}
+
 function AttachButton({ onFile }: { onFile: (file: File) => void }) {
   const attachments = usePromptInputAttachments();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -126,7 +133,7 @@ function StudioPromptInputInner({ placeholder, onSubmit, className }: StudioProm
             <PromptInputTools>
               <AttachButton onFile={handleNewFile} />
             </PromptInputTools>
-            <PromptInputSubmit status={status} />
+            <SubmitButton status={status} />
           </PromptInputFooter>
         </PromptInput>
       </CanvasDropZone>
