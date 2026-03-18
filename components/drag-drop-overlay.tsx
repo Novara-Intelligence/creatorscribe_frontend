@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Upload01Icon } from "hugeicons-react";
-import usePanelStore from "@/store/panelStore";
+import { usePanel } from "@/hooks/usePanel";
 
 const ACCEPTED = ["image/", "video/"];
 
@@ -12,7 +12,7 @@ function isFilesDrag(e: DragEvent) {
 
 export function DragDropOverlay() {
   const [active, setActive] = useState(false);
-  const addPendingFiles = usePanelStore((s) => s.addPendingFiles);
+  const { addPendingFiles } = usePanel();
 
   useEffect(() => {
     let counter = 0;

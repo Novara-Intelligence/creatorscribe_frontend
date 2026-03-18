@@ -15,7 +15,7 @@ import {
 import { ImageUpload01Icon, Camera01Icon, UserIcon } from "hugeicons-react";
 import { Input } from "@/components/ui/input";
 import { DialogDescription } from "@/components/ui/dialog";
-import useUserStore from "@/store/userStore";
+import { useUser } from "@/hooks/useUser";
 import { Badge } from "@/components/ui/badge";
 
 function SettingRow({
@@ -140,9 +140,7 @@ export default function ProfilePage() {
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const profile = useUserStore((s) => s.profile);
-  const fetchProfile = useUserStore((s) => s.fetchProfile);
-  const updateProfile = useUserStore((s) => s.updateProfile);
+  const { profile, fetchProfile, updateProfile } = useUser();
 
   useEffect(() => {
     fetchProfile();

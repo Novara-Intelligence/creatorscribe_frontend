@@ -14,7 +14,7 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import { ClientSwitcher } from "@/components/client-switcher";
-import usePanelStore from "@/store/panelStore";
+import { usePanel } from "@/hooks/usePanel";
 
 const navItems = [
   { label: "Home", icon: Home04Icon, href: "/app/home" },
@@ -35,8 +35,7 @@ const navFooterItems = [{
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const activePanel = usePanelStore((s) => s.activePanel);
-  const togglePanel = usePanelStore((s) => s.togglePanel);
+  const { activePanel, togglePanel } = usePanel();
   const uploadsActive = activePanel === "uploads";
 
   return (

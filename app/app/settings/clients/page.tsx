@@ -10,8 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import useClientStore from "@/store/clientStore";
-import useUserStore from "@/store/userStore";
+import { useClient } from "@/hooks/useClient";
+import { useUser } from "@/hooks/useUser";
 import { Settings01Icon, UserGroupIcon, Edit01Icon, Delete01Icon, Search01Icon, UserAdd01Icon } from "hugeicons-react";
 import clientService from "@/services/client.service";
 import userService from "@/services/user.service";
@@ -182,7 +182,7 @@ function EditClientDialog({ open, onClose, client }: { open: boolean; onClose: (
   const [dragging, setDragging] = useState(false);
   const [clientName, setClientName] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const fetchClients = useClientStore((s) => s.fetchClients);
+  const { fetchClients } = useClient();
 
   useEffect(() => {
     if (open && client) {
@@ -278,7 +278,7 @@ function AddClientDialog({ open, onClose }: { open: boolean; onClose: () => void
   const [checkedUser, setCheckedUser] = useState<CheckedUser | null>(null);
   const [invitees, setInvitees] = useState<NonNullable<CheckedUser & { found: true }>[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const fetchClients = useClientStore((s) => s.fetchClients);
+  const { fetchClients } = useClient();
 
   const handleClose = () => {
     setLogoFile(null); setLogoPreview(null); setClientName("");
@@ -447,7 +447,7 @@ function ViewTeamsDialog({ client, open, onClose }: { client: Client | null; ope
   const [search, setSearch] = useState("");
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [removingMember, setRemovingMember] = useState<TeamMember | null>(null);
-  const profile = useUserStore((s) => s.profile);
+  const { profile } = useUser();
   const canEditRoles = client?.role === "owner" || client?.role === "admin";
 
   const fetchMembers = useCallback(async (q?: string) => {
@@ -609,11 +609,7 @@ function ViewTeamsDialog({ client, open, onClose }: { client: Client | null; ope
 }
 
 export default function ClientsPage() {
-  const clients = useClientStore((s) => s.clients);
-  const activeClientId = useClientStore((s) => s.activeClientId);
-  const isLoading = useClientStore((s) => s.isLoading);
-  const fetchClients = useClientStore((s) => s.fetchClients);
-  const setActiveClientId = useClientStore((s) => s.setActiveClientId);
+  const { clients, activeClientId, isLoading, fetchClients, setActiveClientId } = useClient();
 
   const [teamsClient, setTeamsClient] = useState<Client | null>(null);
   const [editClient, setEditClient] = useState<Client | null>(null);

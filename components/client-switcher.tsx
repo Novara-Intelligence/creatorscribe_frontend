@@ -10,20 +10,14 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import useClientStore, { useActiveClient } from "@/store/clientStore";
+import { useClient } from "@/hooks/useClient";
 
 export function ClientSwitcher() {
-  const clients = useClientStore((s) => s.clients);
-  const activeClientId = useClientStore((s) => s.activeClientId);
-  const isLoading = useClientStore((s) => s.isLoading);
-  const fetchClients = useClientStore((s) => s.fetchClients);
-  const setActiveClientId = useClientStore((s) => s.setActiveClientId);
+  const { clients, activeClientId, activeClient, isLoading, fetchClients, setActiveClientId } = useClient();
 
   useEffect(() => {
     fetchClients();
   }, [fetchClients]);
-
-  const activeClient = useActiveClient();
 
   if (isLoading) {
     return (

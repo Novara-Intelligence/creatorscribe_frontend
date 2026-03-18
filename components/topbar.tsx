@@ -20,8 +20,8 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { APP_ROUTES } from "@/constants/routes";
-import useClientStore from "@/store/clientStore";
-import useUserStore from "@/store/userStore";
+import { useClient } from "@/hooks/useClient";
+import { useUser } from "@/hooks/useUser";
 import { useEffect } from "react";
 import { Badge } from "./ui/badge";
 
@@ -29,13 +29,8 @@ export function Topbar() {
   const { theme, setTheme } = useTheme();
   const { logout } = useAuth();
   const router = useRouter();
-  const clients = useClientStore((s) => s.clients);
-  const activeClientId = useClientStore((s) => s.activeClientId);
-  const setActiveClientId = useClientStore((s) => s.setActiveClientId);
-  const activeClient = clients.find((c) => c.id === activeClientId) ?? clients[0];
-
-  const profile = useUserStore((s) => s.profile);
-  const fetchProfile = useUserStore((s) => s.fetchProfile);
+  const { clients, activeClient, setActiveClientId } = useClient();
+  const { profile, fetchProfile } = useUser();
 
   const progress =
     profile?.total_tokens != null && profile.total_tokens > 0

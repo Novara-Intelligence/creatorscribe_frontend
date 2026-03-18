@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import usePanelStore from "@/store/panelStore";
+import { usePanel } from "@/hooks/usePanel";
 import { useUpload } from "@/hooks/useUpload";
 import type { Upload } from "@/types/upload";
 import { Cancel01Icon, Upload01Icon, Search01Icon } from "hugeicons-react";
@@ -63,7 +63,7 @@ function UploadedThumb({
   const [hovered, setHovered] = useState(false);
   const [checked, setChecked] = useState(false);
   const isVideo = upload.file_type.startsWith("video/");
-  const setDraggedFile = usePanelStore((s) => s.setDraggedFile);
+  const { setDraggedFile } = usePanel();
 
   const handleDragStart = (e: React.DragEvent) => {
     // Set a small ghost image synchronously so the drag preview isn't the full tile
@@ -224,9 +224,7 @@ function PendingUploadThumb({
 }
 
 export function UploadPanel() {
-  const activePanel = usePanelStore((s) => s.activePanel);
-  const closePanel = usePanelStore((s) => s.closePanel);
-  const addPendingFiles = usePanelStore((s) => s.addPendingFiles);
+  const { activePanel, closePanel, addPendingFiles } = usePanel();
   const inputRef = useRef<HTMLInputElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const open = activePanel === "uploads";

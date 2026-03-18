@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronRight, Mic, Headphones, ImagePlay, Bot, Music, Languages } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import usePanelStore from "@/store/panelStore";
-import useUserStore from "@/store/userStore";
+import { usePanel } from "@/hooks/usePanel";
+import { useUser } from "@/hooks/useUser";
 import { ImagePlay as ImagePlayIcon } from "lucide-react";
 
 const ACTION_ITEMS = [
@@ -24,7 +24,7 @@ function getGreeting() {
 }
 
 function FileDropInput() {
-  const draggedFile = usePanelStore((s) => s.draggedFile);
+  const { draggedFile } = usePanel();
   const [droppedFile, setDroppedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isOver, setIsOver] = useState(false);
@@ -88,8 +88,8 @@ function FileDropInput() {
 }
 
 export default function HomePage() {
-  const draggedFile = usePanelStore((s) => s.draggedFile);
-  const profile = useUserStore((s) => s.profile);
+  const { draggedFile } = usePanel();
+  const { profile } = useUser();
   const firstName = profile?.full_name?.split(" ")[0] ?? "there";
   const [droppingOn, setDroppingOn] = useState<string | null>(null);
 
