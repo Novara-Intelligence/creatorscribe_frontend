@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Analytics01Icon, Calendar03Icon, HelpSquareIcon, Home04Icon, PuzzleIcon, Tag01Icon, Upload01Icon } from "hugeicons-react";
+import { Analytics01Icon, Calendar03Icon, HelpSquareIcon, Home04Icon, PuzzleIcon, Tag01Icon, Upload01Icon, TextSquareIcon } from "hugeicons-react";
 import {
   Sidebar,
   SidebarHeader,
@@ -16,11 +16,27 @@ import {
 import { ClientSwitcher } from "@/components/client-switcher";
 import { usePanel } from "@/hooks/usePanel";
 
+function UploadsPanelButton() {
+  const { activePanel, togglePanel } = usePanel();
+
+  return (
+    <SidebarMenuButton
+      onClick={() => togglePanel("uploads")}
+      isActive={activePanel === "uploads"}
+      className="px-2 !py-4 rounded-lg group-data-[collapsible=icon]:justify-center data-[active]:bg-gray-200 dark:data-[active]:bg-secondary text-muted-foreground data-[active]:text-primary cursor-pointer"
+    >
+      <Upload01Icon className="shrink-0 !size-4.5" strokeWidth={1.9} />
+      <span className="font-raleway mt-0.5 text-sm font-semibold leading-none group-data-[collapsible=icon]:hidden">Uploads</span>
+    </SidebarMenuButton>
+  );
+}
+
 const navItems = [
   { label: "Home", icon: Home04Icon, href: "/app/home" },
   { label: "Analytics", icon: Analytics01Icon, href: "/app/home/analytics" },
   { label: "Content Calendar", icon: Calendar03Icon, href: "/app/home/content-calendar" },
   { label: "Addons", icon: PuzzleIcon, href: "/app/home/addons" },
+  { label: "Caption Studio", icon: TextSquareIcon, href: "/app/caption-studio" },
 ];
 
 const navFooterItems = [{
@@ -35,8 +51,6 @@ const navFooterItems = [{
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { activePanel, togglePanel } = usePanel();
-  const uploadsActive = activePanel === "uploads";
 
   return (
     <Sidebar collapsible="icon" className="border-r">
@@ -61,14 +75,7 @@ export function AppSidebar() {
             </SidebarMenuItem>
           ))}
           <SidebarMenuItem className="py-1 flex items-center justify-center">
-            <SidebarMenuButton
-              onClick={() => togglePanel("uploads")}
-              isActive={uploadsActive}
-              className="px-2 !py-4 rounded-lg group-data-[collapsible=icon]:justify-center data-[active]:bg-gray-200 dark:data-[active]:bg-secondary text-muted-foreground data-[active]:text-primary cursor-pointer"
-            >
-              <Upload01Icon className="shrink-0 !size-4.5" strokeWidth={1.9} />
-              <span className="font-raleway mt-0.5 text-sm font-semibold leading-none group-data-[collapsible=icon]:hidden">Uploads</span>
-            </SidebarMenuButton>
+            <UploadsPanelButton />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>

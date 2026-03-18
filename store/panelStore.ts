@@ -11,6 +11,8 @@ interface PanelStore {
   clearPendingFiles: () => void;
   draggedFile: File | null;
   setDraggedFile: (file: File | null) => void;
+  uploadRefreshKey: number;
+  triggerUploadRefresh: () => void;
 }
 
 const usePanelStore = create<PanelStore>((set) => ({
@@ -22,6 +24,8 @@ const usePanelStore = create<PanelStore>((set) => ({
   clearPendingFiles: () => set({ pendingFiles: [] }),
   draggedFile: null,
   setDraggedFile: (file) => set({ draggedFile: file }),
+  uploadRefreshKey: 0,
+  triggerUploadRefresh: () => set((s) => ({ uploadRefreshKey: s.uploadRefreshKey + 1 })),
 }));
 
 export default usePanelStore;

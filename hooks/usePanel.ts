@@ -11,6 +11,8 @@ export function usePanel() {
   const clearPendingFiles = usePanelStore((s) => s.clearPendingFiles);
   const draggedFile = usePanelStore((s) => s.draggedFile);
   const setDraggedFile = usePanelStore((s) => s.setDraggedFile);
+  const uploadRefreshKey = usePanelStore((s) => s.uploadRefreshKey);
+  const triggerUploadRefresh = usePanelStore((s) => s.triggerUploadRefresh);
 
-  return { activePanel, togglePanel, closePanel, pendingFiles, addPendingFiles, clearPendingFiles, draggedFile, setDraggedFile };
+  return { activePanel, togglePanel, closePanel, pendingFiles, addPendingFiles, clearPendingFiles, draggedFile, setDraggedFile, uploadRefreshKey, triggerUploadRefresh };
 }
