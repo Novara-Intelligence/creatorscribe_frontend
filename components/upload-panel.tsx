@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { usePanel } from "@/hooks/usePanel";
 import { useUpload } from "@/hooks/useUpload";
 import type { Upload } from "@/types/upload";
@@ -12,14 +12,14 @@ import { Button } from "./ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const GAP = 4;
-const TARGET_HEIGHT = 100;
+const TARGET_HEIGHT = 80;
 
 function computeRows(
   items: { aspectRatio: number }[],
   containerWidth: number
-): Array<{ indices: number[]; height: number }> {
+): Array<{ indices: number[]; height: number; filled: boolean }> {
   if (!containerWidth || items.length === 0) return [];
-  const rows: Array<{ indices: number[]; height: number }> = [];
+  const rows: Array<{ indices: number[]; height: number; filled: boolean }> = [];
   let rowIndices: number[] = [];
   let arSum = 0;
 
@@ -34,7 +34,7 @@ function computeRows(
       rowIndices.pop();
       arSum -= ar;
       const prevGaps = (rowIndices.length - 1) * GAP;
-      rows.push({ indices: [...rowIndices], height: (containerWidth - prevGaps) / arSum });
+      rows.push({ indices: [...rowIndices], height: (containerWidth - prevGaps) / arSum, filled: true });
       rowIndices = [i];
       arSum = ar;
     }
@@ -42,8 +42,10 @@ function computeRows(
 
   if (rowIndices.length > 0) {
     const gaps = (rowIndices.length - 1) * GAP;
-    const height = Math.min((containerWidth - gaps) / arSum, TARGET_HEIGHT);
-    rows.push({ indices: rowIndices, height });
+    const naturalHeight = (containerWidth - gaps) / arSum;
+    const filled = naturalHeight <= TARGET_HEIGHT;
+    const height = filled ? naturalHeight : TARGET_HEIGHT;
+    rows.push({ indices: rowIndices, height, filled });
   }
 
   return rows;
@@ -53,11 +55,13 @@ function UploadedThumb({
   upload,
   height,
   aspectRatio,
+  style,
   onAspectRatio,
 }: {
   upload: Upload;
   height: number;
   aspectRatio: number;
+  style: React.CSSProperties;
   onAspectRatio: (r: number) => void;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -89,8 +93,8 @@ function UploadedThumb({
 
   return (
     <div
-      style={{ flex: aspectRatio, height, minWidth: 0 }}
-      className="relative overflow-hidden rounded-md bg-muted cursor-grab active:cursor-grabbing shrink-0"
+      style={style}
+      className="relative overflow-hidden rounded-md bg-muted cursor-grab active:cursor-grabbing shrink-0 animate-in fade-in duration-200"
       draggable
       onDragStart={handleDragStart}
       onDragEnd={() => setDraggedFile(null)}
@@ -160,11 +164,13 @@ function PendingUploadThumb({
   pending,
   height,
   aspectRatio,
+  style,
   onAspectRatio,
 }: {
   pending: PendingFile;
   height: number;
   aspectRatio: number;
+  style: React.CSSProperties;
   onAspectRatio: (r: number) => void;
 }) {
   const [url, setUrl] = useState<string | null>(null);
@@ -178,8 +184,8 @@ function PendingUploadThumb({
 
   return (
     <div
-      style={{ flex: aspectRatio, height, minWidth: 0 }}
-      className="relative overflow-hidden rounded-md bg-muted shrink-0"
+      style={style}
+      className="relative overflow-hidden rounded-md bg-muted shrink-0 animate-in fade-in duration-200"
     >
       {url && (isVideo ? (
         <video
@@ -311,7 +317,7 @@ export function UploadPanel() {
 
   return (
     <aside
-      className={`relative flex flex-col border-r bg-background transition-all duration-300 ease-in-out overflow-hidden shrink-0 h-full ${open ? "w-80 opacity-100" : "w-0 opacity-0"}`}
+      className={`relative flex flex-col border-r bg-background transition-all duration-200 ease-in-out overflow-hidden shrink-0 h-full ${open ? "w-80 opacity-100" : "w-0 opacity-0"}`}
       onDragEnter={(e) => { e.preventDefault(); dragCounter.current++; if (dragCounter.current === 1) setDraggingOver(true); }}
       onDragLeave={() => { dragCounter.current--; if (dragCounter.current === 0) setDraggingOver(false); }}
       onDragOver={(e) => e.preventDefault()}
@@ -411,12 +417,16 @@ export function UploadPanel() {
                   <div key={ri} className="flex gap-1">
                     {row.indices.map((idx) => {
                       const item = items[idx];
+                      const style = row.filled
+                        ? { flex: item.aspectRatio, height: row.height, minWidth: 0 }
+                        : { width: item.aspectRatio * row.height, height: row.height, flexShrink: 0 };
                       return item.kind === "pending" ? (
                         <PendingUploadThumb
                           key={item.key}
                           pending={item.pending}
                           height={row.height}
                           aspectRatio={item.aspectRatio}
+                          style={style}
                           onAspectRatio={(r) => handleAspectRatio(item.key, r)}
                         />
                       ) : (
@@ -425,6 +435,7 @@ export function UploadPanel() {
                           upload={item.upload}
                           height={row.height}
                           aspectRatio={item.aspectRatio}
+                          style={style}
                           onAspectRatio={(r) => handleAspectRatio(item.key, r)}
                         />
                       );
