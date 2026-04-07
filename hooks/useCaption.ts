@@ -8,5 +8,17 @@ export function useCaption() {
   const error = useCaptionStore((s) => s.error);
   const createSession = useCaptionStore((s) => s.createSession);
 
-  return { activeSession, isLoading, error, createSession };
+  const sessions = useCaptionStore((s) => s.sessions);
+  const sessionsMeta = useCaptionStore((s) => s.sessionsMeta);
+  const sessionsLoading = useCaptionStore((s) => s.sessionsLoading);
+  const sessionsLoadingMore = useCaptionStore((s) => s.sessionsLoadingMore);
+  const sessionsError = useCaptionStore((s) => s.sessionsError);
+  const fetchSessions = useCaptionStore((s) => s.fetchSessions);
+  const loadMoreSessions = useCaptionStore((s) => s.loadMoreSessions);
+
+  return {
+    activeSession, isLoading, error, createSession,
+    sessions, sessionsMeta, sessionsLoading, sessionsLoadingMore, sessionsError,
+    fetchSessions, loadMoreSessions,
+  };
 }

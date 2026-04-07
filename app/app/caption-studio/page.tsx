@@ -2,10 +2,11 @@
 
 import { useState, useCallback, useEffect, useRef, forwardRef } from "react";
 import { Cancel01Icon, Settings01Icon } from "hugeicons-react";
-import { Copy, Check, MoreHorizontal, Trash2, Search, Pencil } from "lucide-react";
+import { Copy, Check, MoreHorizontal, Trash2, Search, Pencil, Film } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +35,8 @@ import {
 import { Transcription, TranscriptionSegment } from "@/components/ai/transcription";
 import type { PromptInputMessage } from "@/components/ai/prompt-input";
 import { useCaption } from "@/hooks/useCaption";
+import { useDebounce } from "@/hooks/useDebounce";
+import useClientStore from "@/store/clientStore";
 
 // ─── Sample data ──────────────────────────────────────────────────────────────
 
@@ -278,39 +281,78 @@ function AssistantBubble({ msg }: { msg: AssistantMessage }) {
 
 // ─── History tab ──────────────────────────────────────────────────────────────
 
-const SAMPLE_HISTORY = [
-  {
-    id: "1",
-    title: "Golden Hour Reel",
-    thumbnail: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=80&h=80&fit=crop",
-    created_at: "March 12, 2026",
-    group: "March 12, 2026",
-  },
-  {
-    id: "2",
-    title: "City Skyline Timelapse",
-    thumbnail: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=80&h=80&fit=crop",
-    created_at: "March 12, 2026",
-    group: "March 12, 2026",
-  },
-  {
-    id: "3",
-    title: "Travel Montage — Bali",
-    thumbnail: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=80&h=80&fit=crop",
-    created_at: "March 10, 2026",
-    group: "March 10, 2026",
-  },
-];
+function SessionThumbnail({ src, alt }: { src: string; alt: string }) {
+  const [error, setError] = useState(false);
+
+  if (!src || error) {
+    return (
+      <div className="size-10 rounded-md shrink-0 bg-muted flex items-center justify-center">
+        <Film className="size-4 text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className="size-10 rounded-md object-cover shrink-0"
+      onError={() => setError(true)}
+    />
+  );
+}
+
+function SessionShimmer() {
+  return (
+    <div className="flex items-center gap-3 px-2 py-2">
+      <Skeleton className="size-10 rounded-md shrink-0" />
+      <div className="flex-1 space-y-1.5">
+        <Skeleton className="h-3 w-3/4 rounded" />
+        <Skeleton className="h-2.5 w-1/2 rounded" />
+      </div>
+    </div>
+  );
+}
+
+function formatGroupDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
 
 function HistoryTab() {
   const [search, setSearch] = useState("");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const debouncedSearch = useDebounce(search, 400);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const filtered = SAMPLE_HISTORY.filter((s) =>
-    s.title.toLowerCase().includes(search.toLowerCase()),
-  );
+  const {
+    sessions, sessionsMeta, sessionsLoading, sessionsLoadingMore,
+    fetchSessions, loadMoreSessions,
+  } = useCaption();
+  const activeClientId = useClientStore((s) => s.activeClientId);
 
-  const groups = Array.from(new Set(filtered.map((s) => s.group)));
+  useEffect(() => {
+    fetchSessions(debouncedSearch);
+  }, [debouncedSearch, fetchSessions, activeClientId]);
+
+  // Infinite scroll via IntersectionObserver
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) loadMoreSessions(debouncedSearch); },
+      { threshold: 0.1 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [debouncedSearch, loadMoreSessions]);
+
+  // Group sessions by date
+  const groups = sessions.reduce<Record<string, typeof sessions>>((acc, s) => {
+    const group = formatGroupDate(s.created_at);
+    (acc[group] ??= []).push(s);
+    return acc;
+  }, {});
 
   return (
     <div className="flex flex-col h-full">
@@ -327,61 +369,75 @@ function HistoryTab() {
         </div>
       </div>
 
-      {/* Grouped list */}
-      <div className="flex-1 overflow-y-auto px-3 space-y-4 pb-4">
-        {groups.map((group) => (
-          <div key={group}>
-            <div className="flex justify-center mb-2">
-              <Badge variant="secondary" className="text-[11px] text-muted-foreground font-normal">
-                {group}
-              </Badge>
-            </div>
-            <div className="space-y-1">
-              {filtered
-                .filter((s) => s.group === group)
-                .map((session) => (
-                  <div
-                    key={session.id}
-                    onMouseEnter={() => setHoveredId(session.id)}
-                    onMouseLeave={() => setHoveredId(null)}
-                    className="relative flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted/60 transition-colors group"
-                  >
-                    <img
-                      src={session.thumbnail}
-                      alt={session.title}
-                      className="size-10 rounded-md object-cover shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate">{session.title}</p>
-                      <p className="text-[11px] text-muted-foreground">{session.created_at}</p>
-                    </div>
-                    {hoveredId === session.id && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger className="flex size-6 items-center justify-center rounded-md hover:bg-muted text-muted-foreground shrink-0">
-                          <MoreHorizontal className="size-3.5" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-24 min-w-0">
-                          <DropdownMenuItem className="text-xs py-1">
-                            <Pencil className="size-3" />
-                            Rename
-                          </DropdownMenuItem>
-                          <DropdownMenuItem variant="destructive" className="text-xs py-1">
-                            <Trash2 className="size-3" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </div>
-                ))}
-            </div>
+      {/* List */}
+      <div className="flex-1 overflow-y-auto px-3 pb-4 space-y-4">
+        {sessionsLoading ? (
+          <div className="space-y-1">
+            {Array.from({ length: 6 }).map((_, i) => <SessionShimmer key={i} />)}
           </div>
-        ))}
-
-        {filtered.length === 0 && (
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground pt-12">
+        ) : sessions.length === 0 ? (
+          <div className="flex items-center justify-center pt-12 text-sm text-muted-foreground">
             No sessions found.
           </div>
+        ) : (
+          <>
+            {Object.entries(groups).map(([group, items]) => (
+              <div key={group}>
+                <div className="flex justify-center mb-2">
+                  <Badge variant="secondary" className="text-[11px] text-muted-foreground font-normal">
+                    {group}
+                  </Badge>
+                </div>
+                <div className="space-y-1">
+                  {items.map((session) => (
+                    <div
+                      key={session.id}
+                      onMouseEnter={() => setHoveredId(session.id)}
+                      onMouseLeave={() => setHoveredId(null)}
+                      className="relative flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted/60 transition-colors"
+                    >
+                      <SessionThumbnail src={session.thumbnail} alt={session.title} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium truncate">{session.last_caption?.title || session.title}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {formatGroupDate(session.created_at)}
+                        </p>
+                      </div>
+                      {hoveredId === session.id && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger className="flex size-6 items-center justify-center rounded-md hover:bg-muted text-muted-foreground shrink-0">
+                            <MoreHorizontal className="size-3.5" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-24 min-w-0">
+                            <DropdownMenuItem className="text-xs py-1">
+                              <Pencil className="size-3" />
+                              Rename
+                            </DropdownMenuItem>
+                            <DropdownMenuItem variant="destructive" className="text-xs py-1">
+                              <Trash2 className="size-3" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {/* Sentinel + load-more shimmer */}
+            {sessionsMeta?.has_next && (
+              <div ref={sentinelRef} className="space-y-1">
+                {sessionsLoadingMore && (
+                  <>
+                    <SessionShimmer />
+                    <SessionShimmer />
+                  </>
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
