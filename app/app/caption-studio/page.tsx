@@ -2,8 +2,16 @@
 
 import { useState, useCallback, useEffect, useRef, forwardRef } from "react";
 import { Cancel01Icon, Settings01Icon } from "hugeicons-react";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, MoreHorizontal, Trash2, Search, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { StudioPromptInput } from "@/components/ai/studio-prompt-input";
 import { Reasoning, ReasoningContent, ReasoningTrigger } from "@/components/ai/reasoning";
@@ -25,6 +33,7 @@ import {
 } from "@/components/ai/audio-player";
 import { Transcription, TranscriptionSegment } from "@/components/ai/transcription";
 import type { PromptInputMessage } from "@/components/ai/prompt-input";
+import { useCaption } from "@/hooks/useCaption";
 
 // ─── Sample data ──────────────────────────────────────────────────────────────
 
@@ -267,17 +276,164 @@ function AssistantBubble({ msg }: { msg: AssistantMessage }) {
 
 // ─── Properties panel ─────────────────────────────────────────────────────────
 
+// ─── History tab ──────────────────────────────────────────────────────────────
+
+const SAMPLE_HISTORY = [
+  {
+    id: "1",
+    title: "Golden Hour Reel",
+    thumbnail: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=80&h=80&fit=crop",
+    created_at: "March 12, 2026",
+    group: "March 12, 2026",
+  },
+  {
+    id: "2",
+    title: "City Skyline Timelapse",
+    thumbnail: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=80&h=80&fit=crop",
+    created_at: "March 12, 2026",
+    group: "March 12, 2026",
+  },
+  {
+    id: "3",
+    title: "Travel Montage — Bali",
+    thumbnail: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=80&h=80&fit=crop",
+    created_at: "March 10, 2026",
+    group: "March 10, 2026",
+  },
+];
+
+function HistoryTab() {
+  const [search, setSearch] = useState("");
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  const filtered = SAMPLE_HISTORY.filter((s) =>
+    s.title.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const groups = Array.from(new Set(filtered.map((s) => s.group)));
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Search */}
+      <div className="px-4 py-3">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search sessions…"
+            className="pl-8 h-8 text-xs"
+          />
+        </div>
+      </div>
+
+      {/* Grouped list */}
+      <div className="flex-1 overflow-y-auto px-3 space-y-4 pb-4">
+        {groups.map((group) => (
+          <div key={group}>
+            <div className="flex justify-center mb-2">
+              <Badge variant="secondary" className="text-[11px] text-muted-foreground font-normal">
+                {group}
+              </Badge>
+            </div>
+            <div className="space-y-1">
+              {filtered
+                .filter((s) => s.group === group)
+                .map((session) => (
+                  <div
+                    key={session.id}
+                    onMouseEnter={() => setHoveredId(session.id)}
+                    onMouseLeave={() => setHoveredId(null)}
+                    className="relative flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted/60 transition-colors group"
+                  >
+                    <img
+                      src={session.thumbnail}
+                      alt={session.title}
+                      className="size-10 rounded-md object-cover shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate">{session.title}</p>
+                      <p className="text-[11px] text-muted-foreground">{session.created_at}</p>
+                    </div>
+                    {hoveredId === session.id && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger className="flex size-6 items-center justify-center rounded-md hover:bg-muted text-muted-foreground shrink-0">
+                          <MoreHorizontal className="size-3.5" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-24 min-w-0">
+                          <DropdownMenuItem className="text-xs py-1">
+                            <Pencil className="size-3" />
+                            Rename
+                          </DropdownMenuItem>
+                          <DropdownMenuItem variant="destructive" className="text-xs py-1">
+                            <Trash2 className="size-3" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
+                ))}
+            </div>
+          </div>
+        ))}
+
+        {filtered.length === 0 && (
+          <div className="flex h-full items-center justify-center text-sm text-muted-foreground pt-12">
+            No sessions found.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Panel ────────────────────────────────────────────────────────────────────
+
+type PanelTab = "settings" | "history";
+
 function PanelContent({ onClose }: { onClose: () => void }) {
+  const [activeTab, setActiveTab] = useState<PanelTab>("settings");
+
   return (
     <div className="flex flex-col h-full w-100">
-      <div className="flex items-center justify-between px-4 py-1.5 border-b shrink-0">
-        <span className="font-semibold text-sm">Properties</span>
+      <div className="relative flex items-center justify-start px-4 pt-4 shrink-0">
+        <div className="flex items-end gap-4">
+          {(["settings", "history"] as PanelTab[]).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`pb-2 text-sm font-semibold border-b-2 transition-all duration-200 ${
+                activeTab === tab
+                  ? "border-foreground text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab === "settings" ? "Settings" : "History"}
+            </button>
+          ))}
+        </div>
         <button
           onClick={onClose}
-          className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute right-2 flex size-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition-colors mb-1"
         >
           <Cancel01Icon className="size-4" />
         </button>
+      </div>
+      <div className="border-b mx-4" />
+
+      <div className="flex-1 overflow-hidden">
+        <div
+          className="flex h-full transition-transform duration-300 ease-in-out"
+          style={{ transform: activeTab === "settings" ? "translateX(0%)" : "translateX(-100%)" }}
+        >
+          <div className="w-full shrink-0 flex items-center justify-center text-sm text-muted-foreground">
+            No settings yet.
+          </div>
+          <div className="w-full shrink-0 h-full">
+            <HistoryTab />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -323,13 +479,15 @@ export default function CaptionStudioPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isThinking, setIsThinking] = useState(false);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const { createSession } = useCaption();
 
   const handleNewGeneration = useCallback(() => {
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [];
     setMessages([]);
     setIsThinking(false);
-  }, []);
+    createSession();
+  }, [createSession]);
 
   const handleSubmit = useCallback(
     (message: PromptInputMessage) => {
