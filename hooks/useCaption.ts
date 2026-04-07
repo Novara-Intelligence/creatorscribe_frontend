@@ -7,6 +7,8 @@ export function useCaption() {
   const isLoading = useCaptionStore((s) => s.isLoading);
   const error = useCaptionStore((s) => s.error);
   const createSession = useCaptionStore((s) => s.createSession);
+  const setActiveSession = useCaptionStore((s) => s.setActiveSession);
+  const renameSession = useCaptionStore((s) => s.renameSession);
 
   const sessions = useCaptionStore((s) => s.sessions);
   const sessionsMeta = useCaptionStore((s) => s.sessionsMeta);
@@ -17,7 +19,7 @@ export function useCaption() {
   const loadMoreSessions = useCaptionStore((s) => s.loadMoreSessions);
 
   return {
-    activeSession, isLoading, error, createSession,
+    activeSession, isLoading, error, createSession, setActiveSession, renameSession,
     sessions, sessionsMeta, sessionsLoading, sessionsLoadingMore, sessionsError,
     fetchSessions, loadMoreSessions,
   };

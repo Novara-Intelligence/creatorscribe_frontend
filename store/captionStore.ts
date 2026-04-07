@@ -18,6 +18,8 @@ interface CaptionState {
 
 interface CaptionActions {
   createSession: (title?: string) => Promise<void>;
+  setActiveSession: (session: CaptionSession | null) => void;
+  renameSession: (session_id: string, title: string) => Promise<void>;
   fetchSessions: (search?: string) => Promise<void>;
   loadMoreSessions: (search?: string) => Promise<void>;
 }
@@ -33,6 +35,16 @@ const useCaptionStore = create<CaptionStore>()((set, get) => ({
   sessionsError: null,
   isLoading: false,
   error: null,
+
+  setActiveSession: (session) => set({ activeSession: session }),
+
+  renameSession: async (session_id, title) => {
+    const res = await captionService.renameSession(session_id, title);
+    set((s) => ({
+      sessions: s.sessions.map((s) => (s.id === session_id ? res.data : s)),
+      activeSession: s.activeSession?.id === session_id ? res.data : s.activeSession,
+    }));
+  },
 
   createSession: async (title?: string) => {
     const clientId = useClientStore.getState().activeClientId;

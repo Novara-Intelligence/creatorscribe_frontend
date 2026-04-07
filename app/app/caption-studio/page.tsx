@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef, forwardRef } from "react";
 import { Cancel01Icon, Settings01Icon } from "hugeicons-react";
-import { Copy, Check, MoreHorizontal, Trash2, Search, Pencil, Film } from "lucide-react";
+import { Copy, Check, MoreHorizontal, Trash2, Search, Pencil, Film, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +37,7 @@ import type { PromptInputMessage } from "@/components/ai/prompt-input";
 import { useCaption } from "@/hooks/useCaption";
 import { useDebounce } from "@/hooks/useDebounce";
 import useClientStore from "@/store/clientStore";
+import useCaptionStore from "@/store/captionStore";
 
 // ─── Sample data ──────────────────────────────────────────────────────────────
 
@@ -327,13 +328,22 @@ function HistoryTab() {
 
   const {
     sessions, sessionsMeta, sessionsLoading, sessionsLoadingMore,
-    fetchSessions, loadMoreSessions,
+    fetchSessions, loadMoreSessions, setActiveSession, renameSession,
   } = useCaption();
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
   const activeClientId = useClientStore((s) => s.activeClientId);
 
   useEffect(() => {
+    setActiveSession(null);
     fetchSessions(debouncedSearch);
-  }, [debouncedSearch, fetchSessions, activeClientId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeClientId]);
+
+  useEffect(() => {
+    fetchSessions(debouncedSearch);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
 
   // Infinite scroll via IntersectionObserver
   useEffect(() => {
@@ -389,39 +399,90 @@ function HistoryTab() {
                   </Badge>
                 </div>
                 <div className="space-y-1">
-                  {items.map((session) => (
-                    <div
-                      key={session.id}
-                      onMouseEnter={() => setHoveredId(session.id)}
-                      onMouseLeave={() => setHoveredId(null)}
-                      className="relative flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted/60 transition-colors"
-                    >
-                      <SessionThumbnail src={session.thumbnail} alt={session.title} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium truncate">{session.last_caption?.title || session.title}</p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {formatGroupDate(session.created_at)}
-                        </p>
+                  {items.map((session) => {
+                    const isRenaming = renamingId === session.id;
+                    const displayTitle = session.last_caption?.title || session.title;
+
+                    const handleSaveRename = async () => {
+                      const trimmed = renameValue.trim();
+                      if (trimmed && trimmed !== displayTitle) {
+                        await renameSession(session.id, trimmed);
+                      }
+                      setRenamingId(null);
+                    };
+
+                    return (
+                      <div
+                        key={session.id}
+                        onMouseEnter={() => !isRenaming && setHoveredId(session.id)}
+                        onMouseLeave={() => setHoveredId(null)}
+                        className="relative flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-muted/60 transition-colors cursor-pointer"
+                        onClick={() => !isRenaming && setActiveSession(session)}
+                      >
+                        <SessionThumbnail src={session.thumbnail} alt={session.title} />
+
+                        {isRenaming ? (
+                          <div className="flex flex-1 items-center gap-1 min-w-0" onClick={(e) => e.stopPropagation()}>
+                            <Input
+                              autoFocus
+                              value={renameValue}
+                              onChange={(e) => setRenameValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveRename();
+                                if (e.key === "Escape") setRenamingId(null);
+                              }}
+                              className="h-6 text-xs px-1.5 flex-1"
+                            />
+                            <button
+                              onClick={handleSaveRename}
+                              className="flex size-5 items-center justify-center rounded text-muted-foreground hover:text-foreground shrink-0"
+                            >
+                              <Check className="size-3" />
+                            </button>
+                            <button
+                              onClick={() => setRenamingId(null)}
+                              className="flex size-5 items-center justify-center rounded text-muted-foreground hover:text-foreground shrink-0"
+                            >
+                              <X className="size-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium truncate">{displayTitle}</p>
+                              <p className="text-[11px] text-muted-foreground">
+                                {formatGroupDate(session.created_at)}
+                              </p>
+                            </div>
+                            {hoveredId === session.id && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger className="flex size-6 items-center justify-center rounded-md hover:bg-muted text-muted-foreground shrink-0">
+                                  <MoreHorizontal className="size-3.5" />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-24 min-w-0">
+                                  <DropdownMenuItem
+                                    className="text-xs py-1"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setRenamingId(session.id);
+                                      setRenameValue(displayTitle);
+                                    }}
+                                  >
+                                    <Pencil className="size-3" />
+                                    Rename
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem variant="destructive" className="text-xs py-1">
+                                    <Trash2 className="size-3" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
+                          </>
+                        )}
                       </div>
-                      {hoveredId === session.id && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger className="flex size-6 items-center justify-center rounded-md hover:bg-muted text-muted-foreground shrink-0">
-                            <MoreHorizontal className="size-3.5" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-24 min-w-0">
-                            <DropdownMenuItem className="text-xs py-1">
-                              <Pencil className="size-3" />
-                              Rename
-                            </DropdownMenuItem>
-                            <DropdownMenuItem variant="destructive" className="text-xs py-1">
-                              <Trash2 className="size-3" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
@@ -535,23 +596,29 @@ export default function CaptionStudioPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isThinking, setIsThinking] = useState(false);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const { createSession } = useCaption();
+  const { activeSession, createSession, fetchSessions } = useCaption();
 
-  const handleNewGeneration = useCallback(() => {
+  const handleNewGeneration = useCallback(async () => {
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [];
     setMessages([]);
     setIsThinking(false);
-    createSession();
-  }, [createSession]);
+    await createSession();
+    fetchSessions();
+  }, [createSession, fetchSessions]);
 
   const handleSubmit = useCallback(
-    (message: PromptInputMessage) => {
+    async (message: PromptInputMessage) => {
       if (isThinking) return;
 
       const imageUrl = message.files?.[0]?.url;
       const text = message.text?.trim();
       if (!imageUrl && !text) return;
+
+      if (!useCaptionStore.getState().activeSession) {
+        await createSession();
+        fetchSessions();
+      }
 
       timersRef.current.forEach(clearTimeout);
       timersRef.current = [];
@@ -597,16 +664,26 @@ export default function CaptionStudioPage() {
         }, 3000),
       );
     },
-    [isThinking],
+    [isThinking, createSession, fetchSessions],
   );
 
   return (
     <div className="flex h-full overflow-hidden">
       <div className="flex flex-1 flex-col overflow-hidden">
         <div className="flex items-center justify-between px-4 py-1.5 shrink-0">
-          <span className="text-sm font-semibold">Caption Studio</span>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-sm font-semibold shrink-0">Caption Studio</span>
+            {activeSession && (
+              <>
+                <span className="text-muted-foreground text-sm">/</span>
+                <span className="text-sm text-muted-foreground truncate max-w-40">
+                  {activeSession.last_caption?.title || activeSession.title}
+                </span>
+              </>
+            )}
+          </div>
           <div className="flex items-center gap-2">
-            {messages.length > 0 && (
+            {(messages.length > 0 || !!activeSession) && (
               <Button variant="outline" size="sm" onClick={handleNewGeneration}>
                 New generation
               </Button>

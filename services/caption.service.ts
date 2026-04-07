@@ -12,6 +12,11 @@ const captionService = {
     return data;
   },
 
+  async renameSession(session_id: string, title: string): Promise<{ success: boolean; message: string; data: CaptionSession }> {
+    const { data } = await axiosInstance.patch(`caption-studio/sessions/${session_id}/`, { title });
+    return data;
+  },
+
   async createSession(client_id: number, title?: string): Promise<{ success: boolean; message: string; data: CaptionSession }> {
     const { data } = await axiosInstance.post("caption-studio/sessions/", { client_id, ...(title ? { title } : {}) });
     return data;
