@@ -324,6 +324,13 @@ export default function CaptionStudioPage() {
   const [isThinking, setIsThinking] = useState(false);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
+  const handleNewGeneration = useCallback(() => {
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+    setMessages([]);
+    setIsThinking(false);
+  }, []);
+
   const handleSubmit = useCallback(
     (message: PromptInputMessage) => {
       if (isThinking) return;
@@ -384,14 +391,21 @@ export default function CaptionStudioPage() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <div className="flex items-center justify-between px-4 py-1.5 shrink-0">
           <span className="text-sm font-semibold">Caption Studio</span>
-          <Button
-            variant="outline"
-            size="sm"
-            className="size-8 p-0"
-            onClick={() => setPropertiesOpen((v) => !v)}
-          >
-            <Settings01Icon className="size-4" strokeWidth={1.8} />
-          </Button>
+          <div className="flex items-center gap-2">
+            {messages.length > 0 && (
+              <Button variant="outline" size="sm" onClick={handleNewGeneration}>
+                New generation
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="size-8 p-0"
+              onClick={() => setPropertiesOpen((v) => !v)}
+            >
+              <Settings01Icon className="size-4" strokeWidth={1.8} />
+            </Button>
+          </div>
         </div>
 
         {messages.length === 0 ? (
@@ -414,8 +428,13 @@ export default function CaptionStudioPage() {
         )}
 
         <StudioPromptInput
-          placeholder="Upload a video and describe what you need…"
+          placeholder={
+            messages.some((m) => m.role === "user" && (m as UserMessage).imageUrl)
+              ? "Add a follow-up prompt…"
+              : "Upload a video and describe what you need…"
+          }
           onSubmit={handleSubmit}
+          requireFile={!messages.some((m) => m.role === "user" && (m as UserMessage).imageUrl)}
           className="px-4 pb-4 shrink-0"
         />
       </div>

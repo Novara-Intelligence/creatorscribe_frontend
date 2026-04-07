@@ -63,10 +63,10 @@ function AttachmentsDisplay() {
   );
 }
 
-function SubmitButton({ status }: { status: "submitted" | "streaming" | "ready" | "error" }) {
+function SubmitButton({ status, requireFile }: { status: "submitted" | "streaming" | "ready" | "error"; requireFile: boolean }) {
   const attachments = usePromptInputAttachments();
   return (
-    <PromptInputSubmit status={status} disabled={attachments.files.length === 0} />
+    <PromptInputSubmit status={status} disabled={requireFile && attachments.files.length === 0} />
   );
 }
 
@@ -100,9 +100,10 @@ interface StudioPromptInputProps {
   placeholder?: string;
   onSubmit?: (message: PromptInputMessage) => void;
   className?: string;
+  requireFile?: boolean;
 }
 
-function StudioPromptInputInner({ placeholder, onSubmit, className }: StudioPromptInputProps) {
+function StudioPromptInputInner({ placeholder, onSubmit, className, requireFile = true }: StudioPromptInputProps) {
   const [status, setStatus] = useState<"submitted" | "streaming" | "ready" | "error">("ready");
   const { uploadFile } = useUpload();
   const { triggerUploadRefresh } = usePanel();
@@ -133,7 +134,7 @@ function StudioPromptInputInner({ placeholder, onSubmit, className }: StudioProm
             <PromptInputTools>
               <AttachButton onFile={handleNewFile} />
             </PromptInputTools>
-            <SubmitButton status={status} />
+            <SubmitButton status={status} requireFile={requireFile} />
           </PromptInputFooter>
         </PromptInput>
       </CanvasDropZone>

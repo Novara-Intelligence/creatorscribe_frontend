@@ -279,6 +279,7 @@ function AddClientDialog({ open, onClose }: { open: boolean; onClose: () => void
   const [invitees, setInvitees] = useState<NonNullable<CheckedUser & { found: true }>[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const { fetchClients } = useClient();
+  const alreadyAdded = !!checkedUser?.already_in_client || invitees.some((u) => u.email === checkedUser?.email);
 
   const handleClose = () => {
     setLogoFile(null); setLogoPreview(null); setClientName("");
@@ -379,9 +380,9 @@ function AddClientDialog({ open, onClose }: { open: boolean; onClose: () => void
           {!checking && checkedUser && (
             checkedUser.found ? (
               <div
-                className="flex items-center gap-3 px-2 py-2 rounded-lg bg-muted cursor-pointer hover:bg-muted/70 transition-colors"
+                className={`flex items-center gap-3 px-2 py-2 rounded-lg bg-muted transition-colors ${alreadyAdded ? "opacity-60 cursor-not-allowed pointer-events-none" : "cursor-pointer hover:bg-muted/70"}`}
                 onClick={() => {
-                  if (invitees.some((u) => u.email === checkedUser.email)) return;
+                  if (alreadyAdded) return;
                   setInvitees((prev) => [...prev, checkedUser as CheckedUser & { found: true }]);
                   setInviteEmail("");
                   setCheckedUser(null);
@@ -397,7 +398,10 @@ function AddClientDialog({ open, onClose }: { open: boolean; onClose: () => void
                   <span className="text-xs font-semibold truncate">{checkedUser.full_name}</span>
                   <span className="text-[11px] text-muted-foreground truncate">{checkedUser.email}</span>
                 </div>
-                <span className="text-[10px] text-muted-foreground font-medium shrink-0">Click to add</span>
+                {alreadyAdded
+                  ? <Badge variant="outline" className="text-[10px] font-montserrat shrink-0">Cannot invite yourself</Badge>
+                  : <span className="text-[10px] text-muted-foreground font-medium shrink-0">Click to add</span>
+                }
               </div>
             ) : (
               <p className="text-xs text-muted-foreground px-1">{checkedUser.message ?? "No user found."}</p>
