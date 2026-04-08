@@ -3,6 +3,7 @@ export interface UserMessage {
   role: "user";
   text: string;
   imageUrl?: string;
+  mediaType?: string;
 }
 
 export interface AssistantMessage {

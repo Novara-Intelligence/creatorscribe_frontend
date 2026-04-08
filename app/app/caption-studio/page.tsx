@@ -33,7 +33,9 @@ export default function CaptionStudioPage() {
     async (message: PromptInputMessage) => {
       if (isThinking) return;
 
-      const imageUrl = message.files?.[0]?.url;
+      const file = message.files?.[0];
+      const imageUrl = file?.url;
+      const mediaType = file?.mediaType;
       const text = message.text?.trim();
       if (!imageUrl && !text) return;
 
@@ -50,6 +52,7 @@ export default function CaptionStudioPage() {
         role: "user",
         text: text ?? "",
         imageUrl,
+        mediaType,
       };
 
       const assistantId = crypto.randomUUID();

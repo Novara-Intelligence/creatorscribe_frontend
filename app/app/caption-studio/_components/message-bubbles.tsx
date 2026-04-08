@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, forwardRef } from "react";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Reasoning, ReasoningContent, ReasoningTrigger } from "@/components/ai/reasoning";
 import {
@@ -24,6 +24,74 @@ import {
   SAMPLE_TAGS,
 } from "./types";
 import type { UserMessage, AssistantMessage } from "./types";
+
+function fmt(s: number) {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2, "0")}`;
+}
+
+function VideoPreview({ src }: { src: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [current, setCurrent] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  const toggle = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.paused ? v.play() : v.pause();
+  };
+
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = (e.clientX - rect.left) / rect.width;
+    if (videoRef.current) videoRef.current.currentTime = ratio * duration;
+  };
+
+  const progress = duration ? (current / duration) * 100 : 0;
+
+  return (
+    <div className="relative rounded-2xl overflow-hidden max-w-sm group">
+      <video
+        ref={videoRef}
+        src={src}
+        onClick={toggle}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onEnded={() => setIsPlaying(false)}
+        onTimeUpdate={(e) => setCurrent(e.currentTarget.currentTime)}
+        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+        className="w-full max-h-48 object-cover cursor-pointer block"
+      />
+      {/* Overlay control bar */}
+      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-3 pt-6 pb-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        {/* Progress bar */}
+        <div
+          ref={progressRef}
+          onClick={handleProgressClick}
+          className="w-full h-1 bg-white/30 rounded-full cursor-pointer mb-2.5"
+        >
+          <div
+            className="h-full bg-white rounded-full"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={toggle} className="text-white shrink-0">
+            {isPlaying
+              ? <Pause className="size-3.5" fill="currentColor" strokeWidth={0} />
+              : <Play className="size-3.5 ml-px" fill="currentColor" strokeWidth={0} />}
+          </button>
+          <span className="text-[11px] text-white/80 tabular-nums font-[family-name:var(--font-montserrat)]">
+            {fmt(current)} / {fmt(duration)}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -134,14 +202,19 @@ function CaptionsCard() {
 }
 
 export function UserBubble({ msg }: { msg: UserMessage }) {
+  const isVideo = msg.mediaType?.startsWith("video/");
   return (
     <div className="flex flex-col items-end gap-2">
       {msg.imageUrl && (
-        <img
-          src={msg.imageUrl}
-          alt="attachment"
-          className="rounded-2xl max-w-sm max-h-48 object-cover"
-        />
+        isVideo ? (
+          <VideoPreview src={msg.imageUrl} />
+        ) : (
+          <img
+            src={msg.imageUrl}
+            alt="attachment"
+            className="rounded-2xl max-w-sm max-h-48 object-cover"
+          />
+        )
       )}
       {msg.text && (
         <div className="max-w-sm rounded-2xl bg-primary text-primary-foreground px-4 py-2.5 text-sm">
