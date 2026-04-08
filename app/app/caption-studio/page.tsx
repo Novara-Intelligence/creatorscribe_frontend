@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Settings01Icon } from "hugeicons-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StudioPromptInput } from "@/components/ai/studio-prompt-input";
 import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai/conversation";
@@ -11,18 +12,76 @@ import useCaptionStore from "@/store/captionStore";
 import useClientStore from "@/store/clientStore";
 import uploadService from "@/services/upload.service";
 import captionJobService from "@/services/captionJob.service";
+import captionService from "@/services/caption.service";
 import { API_BASE_URL } from "@/constants/config";
 import { UserBubble, AssistantBubble } from "./_components/message-bubbles";
 import { PropertiesPanel } from "./_components/properties-panel";
 import { REASONING } from "./_components/types";
 import type { ChatMessage, UserMessage, AssistantMessage } from "./_components/types";
+import type { SessionJob } from "@/types/caption";
+
+function jobsToMessages(jobs: SessionJob[], apiOrigin: string): ChatMessage[] {
+  return jobs.flatMap((job) => {
+    const isVideo = job.media_type === "video";
+
+    const userMsg: UserMessage = {
+      id: `${job.id}-user`,
+      role: "user",
+      text: job.prompt,
+      imageUrl: job.uploaded_file?.file_url,
+      mediaType: job.uploaded_file?.file_type,
+    };
+
+    const rawAudioUrl = job.audio?.audio_url;
+    const audioUrl = rawAudioUrl
+      ? rawAudioUrl.startsWith("http")
+        ? rawAudioUrl
+        : `${apiOrigin}${rawAudioUrl}`
+      : undefined;
+
+    const assistantMsg: AssistantMessage = {
+      id: `${job.id}-assistant`,
+      role: "assistant",
+      isStreaming: false,
+      reasoningText: isVideo ? REASONING.video.done : REASONING.image.done,
+      audioUrl,
+      audioDuration: job.audio?.duration,
+      segments: job.transcription?.segments,
+      title: job.caption?.title,
+      description: job.caption?.description,
+      tags: job.caption?.tags,
+    };
+
+    return [userMsg, assistantMsg];
+  });
+}
 
 export default function CaptionStudioPage() {
   const [propertiesOpen, setPropertiesOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isThinking, setIsThinking] = useState(false);
+  const [isLoadingSession, setIsLoadingSession] = useState(false);
   const streamCleanupRef = useRef<(() => void) | null>(null);
   const { activeSession, createSession, fetchSessions } = useCaption();
+
+  // Load jobs when active session changes (e.g. user clicks history)
+  useEffect(() => {
+    if (!activeSession) {
+      setMessages([]);
+      return;
+    }
+    streamCleanupRef.current?.();
+    streamCleanupRef.current = null;
+    setIsThinking(false);
+    setMessages([]);
+    setIsLoadingSession(true);
+    const origin = new URL(API_BASE_URL).origin;
+    captionService
+      .getSessionJobs(activeSession.id)
+      .then(({ data }) => setMessages(jobsToMessages(data, origin)))
+      .catch(() => {})
+      .finally(() => setIsLoadingSession(false));
+  }, [activeSession?.id]);
 
   const handleNewGeneration = useCallback(async () => {
     streamCleanupRef.current?.();
@@ -81,7 +140,6 @@ export default function CaptionStudioPage() {
         );
 
       try {
-        // Upload file if provided
         let file_id: number | undefined;
         if (file?.url) {
           const clientId = useClientStore.getState().activeClientId;
@@ -93,14 +151,12 @@ export default function CaptionStudioPage() {
           }
         }
 
-        // Submit job
         const job = await captionJobService.submitJob({
           session_id: session.id,
           file_id,
           prompt: text || undefined,
         });
 
-        // Open SSE stream
         const cleanup = captionJobService.streamJob(job.job_id, {
           onAudioReady: (data) => {
             const origin = new URL(API_BASE_URL).origin;
@@ -145,6 +201,10 @@ export default function CaptionStudioPage() {
     [isThinking, createSession, fetchSessions],
   );
 
+  const hasUploadedFile = messages.some(
+    (m) => m.role === "user" && (m as UserMessage).imageUrl,
+  );
+
   return (
     <div className="flex h-full overflow-hidden">
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -177,7 +237,11 @@ export default function CaptionStudioPage() {
           </div>
         </div>
 
-        {messages.length === 0 ? (
+        {isLoadingSession ? (
+          <div className="flex flex-1 items-center justify-center">
+            <Loader2 className="size-5 text-muted-foreground animate-spin" />
+          </div>
+        ) : messages.length === 0 ? (
           <div className="flex flex-1 items-center justify-center text-muted-foreground text-sm">
             Upload a video and describe the captions you want.
           </div>
@@ -198,12 +262,12 @@ export default function CaptionStudioPage() {
 
         <StudioPromptInput
           placeholder={
-            messages.some((m) => m.role === "user" && (m as UserMessage).imageUrl)
+            hasUploadedFile
               ? "Add a follow-up prompt…"
               : "Upload a video and describe what you need…"
           }
           onSubmit={handleSubmit}
-          requireFile={!messages.some((m) => m.role === "user" && (m as UserMessage).imageUrl)}
+          requireFile={!hasUploadedFile}
           className="px-4 pb-4 shrink-0"
         />
       </div>
