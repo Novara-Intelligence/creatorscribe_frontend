@@ -246,7 +246,7 @@ export default function CaptionStudioPage() {
             Upload a video and describe the captions you want.
           </div>
         ) : (
-          <Conversation className="flex-1">
+          <Conversation className="flex-1" initial="instant">
             <ConversationContent>
               {messages.map((msg) =>
                 msg.role === "user" ? (
