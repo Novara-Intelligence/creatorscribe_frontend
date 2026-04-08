@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Paperclip, X } from "lucide-react";
 import {
   PromptInput,
@@ -19,7 +19,6 @@ import { useUpload } from "@/hooks/useUpload";
 import { usePanel } from "@/hooks/usePanel";
 
 const SUBMITTING_TIMEOUT = 200;
-const STREAMING_TIMEOUT = 2000;
 
 function AttachmentsDisplay() {
   const attachments = usePromptInputAttachments();
@@ -63,10 +62,14 @@ function AttachmentsDisplay() {
   );
 }
 
-function SubmitButton({ status, requireFile }: { status: "submitted" | "streaming" | "ready" | "error"; requireFile: boolean }) {
+function SubmitButton({ status, requireFile, onStop }: { status: "submitted" | "streaming" | "ready" | "error"; requireFile: boolean; onStop?: () => void }) {
   const attachments = usePromptInputAttachments();
   return (
-    <PromptInputSubmit status={status} disabled={requireFile && attachments.files.length === 0} />
+    <PromptInputSubmit
+      status={status}
+      disabled={requireFile && attachments.files.length === 0}
+      onClick={status === "streaming" ? (e) => { e.preventDefault(); onStop?.(); } : undefined}
+    />
   );
 }
 
@@ -99,14 +102,35 @@ function AttachButton({ onFile }: { onFile: (file: File) => void }) {
 interface StudioPromptInputProps {
   placeholder?: string;
   onSubmit?: (message: PromptInputMessage) => void;
+  onStop?: () => void;
+  isStreaming?: boolean;
   className?: string;
   requireFile?: boolean;
 }
 
-function StudioPromptInputInner({ placeholder, onSubmit, className, requireFile = true }: StudioPromptInputProps) {
-  const [status, setStatus] = useState<"submitted" | "streaming" | "ready" | "error">("ready");
+function StudioPromptInputInner({ placeholder, onSubmit, onStop, isStreaming = false, className, requireFile = true }: StudioPromptInputProps) {
+  const [submitting, setSubmitting] = useState(false);
+  const submitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { uploadFile } = useUpload();
   const { triggerUploadRefresh } = usePanel();
+
+  // When parent signals stream ended, cancel any pending timer and reset
+  useEffect(() => {
+    if (!isStreaming) {
+      if (submitTimerRef.current) {
+        clearTimeout(submitTimerRef.current);
+        submitTimerRef.current = null;
+      }
+      setSubmitting(false);
+    }
+  }, [isStreaming]);
+
+  // Derive status purely: parent streaming wins, then local submitting flash
+  const status: "submitted" | "streaming" | "ready" = isStreaming
+    ? "streaming"
+    : submitting
+    ? "submitted"
+    : "ready";
 
   const handleNewFile = useCallback((file: File) => {
     uploadFile(file).then((result) => {
@@ -116,9 +140,11 @@ function StudioPromptInputInner({ placeholder, onSubmit, className, requireFile 
 
   const handleSubmit = useCallback((message: PromptInputMessage) => {
     if (!message.text && !message.files?.length) return;
-    setStatus("submitted");
-    setTimeout(() => setStatus("streaming"), SUBMITTING_TIMEOUT);
-    setTimeout(() => setStatus("ready"), STREAMING_TIMEOUT);
+    setSubmitting(true);
+    submitTimerRef.current = setTimeout(() => {
+      setSubmitting(false);
+      submitTimerRef.current = null;
+    }, SUBMITTING_TIMEOUT);
     onSubmit?.(message);
   }, [onSubmit]);
 
@@ -134,13 +160,15 @@ function StudioPromptInputInner({ placeholder, onSubmit, className, requireFile 
             <PromptInputTools>
               <AttachButton onFile={handleNewFile} />
             </PromptInputTools>
-            <SubmitButton status={status} requireFile={requireFile} />
+            <SubmitButton status={status} requireFile={requireFile} onStop={onStop} />
           </PromptInputFooter>
         </PromptInput>
       </CanvasDropZone>
     </div>
   );
 }
+
+export type { StudioPromptInputProps };
 
 export function StudioPromptInput(props: StudioPromptInputProps) {
   return (

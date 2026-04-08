@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Settings01Icon } from "hugeicons-react";
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StudioPromptInput } from "@/components/ai/studio-prompt-input";
 import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai/conversation";
@@ -14,6 +13,7 @@ import uploadService from "@/services/upload.service";
 import captionJobService from "@/services/captionJob.service";
 import captionService from "@/services/caption.service";
 import { API_BASE_URL } from "@/constants/config";
+import { Skeleton } from "@/components/ui/skeleton";
 import { UserBubble, AssistantBubble } from "./_components/message-bubbles";
 import { PropertiesPanel } from "./_components/properties-panel";
 import { REASONING } from "./_components/types";
@@ -57,15 +57,20 @@ function jobsToMessages(jobs: SessionJob[], apiOrigin: string): ChatMessage[] {
 }
 
 export default function CaptionStudioPage() {
-  const [propertiesOpen, setPropertiesOpen] = useState(false);
+  const [propertiesOpen, setPropertiesOpen] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isThinking, setIsThinking] = useState(false);
   const [isLoadingSession, setIsLoadingSession] = useState(false);
   const streamCleanupRef = useRef<(() => void) | null>(null);
   const { activeSession, createSession, fetchSessions } = useCaption();
+  // mounted = localStorage has been read (Zustand localStorage reads are synchronous,
+  // so by the time this flips to true, activeSession is already hydrated)
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
-  // Load jobs when active session changes (e.g. user clicks history)
+  // Load jobs whenever the active session changes (history click, page refresh, new session)
   useEffect(() => {
+    if (!mounted) return;
     if (!activeSession) {
       setMessages([]);
       return;
@@ -81,7 +86,20 @@ export default function CaptionStudioPage() {
       .then(({ data }) => setMessages(jobsToMessages(data, origin)))
       .catch(() => {})
       .finally(() => setIsLoadingSession(false));
-  }, [activeSession?.id]);
+  }, [activeSession?.id, mounted]);
+
+  const handleStop = useCallback(() => {
+    streamCleanupRef.current?.();
+    streamCleanupRef.current = null;
+    setIsThinking(false);
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.role === "assistant" && (m as AssistantMessage).isStreaming
+          ? { ...m, isStreaming: false }
+          : m,
+      ),
+    );
+  }, []);
 
   const handleNewGeneration = useCallback(async () => {
     streamCleanupRef.current?.();
@@ -237,9 +255,23 @@ export default function CaptionStudioPage() {
           </div>
         </div>
 
-        {isLoadingSession ? (
-          <div className="flex flex-1 items-center justify-center">
-            <Loader2 className="size-5 text-muted-foreground animate-spin" />
+        {!mounted || isLoadingSession ? (
+          <div className="flex flex-1 flex-col gap-8 overflow-hidden p-4">
+            {/* Assistant bubble shimmer */}
+            <div className="flex flex-col gap-3">
+              <Skeleton className="h-4 w-24 rounded-full" />
+              <Skeleton className="h-28 w-full rounded-2xl" />
+            </div>
+            {/* User bubble shimmer */}
+            <div className="flex flex-col items-end gap-2">
+              <Skeleton className="h-40 w-72 rounded-2xl" />
+              <Skeleton className="h-9 w-48 rounded-2xl" />
+            </div>
+            {/* Assistant bubble shimmer */}
+            <div className="flex flex-col gap-3">
+              <Skeleton className="h-4 w-24 rounded-full" />
+              <Skeleton className="h-36 w-full rounded-2xl" />
+            </div>
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-1 items-center justify-center text-muted-foreground text-sm">
@@ -267,6 +299,8 @@ export default function CaptionStudioPage() {
               : "Upload a video and describe what you need…"
           }
           onSubmit={handleSubmit}
+          onStop={handleStop}
+          isStreaming={isThinking}
           requireFile={!hasUploadedFile}
           className="px-4 pb-4 shrink-0"
         />

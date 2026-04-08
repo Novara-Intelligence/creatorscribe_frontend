@@ -67,9 +67,24 @@ export function HistoryTab() {
   } = useCaption();
 
   const activeClientId = useClientStore((s) => s.activeClientId);
+  const prevClientIdRef = useRef<number | null>(null);
 
   useEffect(() => {
-    setActiveSession(null);
+    const isMount = prevClientIdRef.current === null;
+    const clientChanged = !isMount && prevClientIdRef.current !== activeClientId;
+    prevClientIdRef.current = activeClientId;
+
+    if (clientChanged) {
+      // User switched client — clear the previous session
+      setActiveSession(null);
+    } else if (isMount) {
+      // On mount — clear only if the persisted session belongs to a different client
+      const current = activeSession;
+      if (current && current.client_id !== activeClientId) {
+        setActiveSession(null);
+      }
+    }
+
     fetchSessions(debouncedSearch);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeClientId]);
