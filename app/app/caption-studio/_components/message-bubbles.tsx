@@ -16,14 +16,7 @@ import {
   AudioPlayerVolumeRange,
 } from "@/components/ai/audio-player";
 import { Transcription, TranscriptionSegment } from "@/components/ai/transcription";
-import {
-  SAMPLE_AUDIO_SRC,
-  SAMPLE_SEGMENTS,
-  SAMPLE_TITLE,
-  SAMPLE_DESCRIPTION,
-  SAMPLE_TAGS,
-} from "./types";
-import type { UserMessage, AssistantMessage } from "./types";
+import type { UserMessage, AssistantMessage, TranscriptionSegment as SegmentType } from "./types";
 
 function fmt(s: number) {
   const m = Math.floor(s / 60);
@@ -33,7 +26,6 @@ function fmt(s: number) {
 
 function VideoPreview({ src }: { src: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const progressRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -65,18 +57,12 @@ function VideoPreview({ src }: { src: string }) {
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
         className="w-full max-h-48 object-cover cursor-pointer block"
       />
-      {/* Overlay control bar */}
       <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-3 pt-6 pb-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-        {/* Progress bar */}
         <div
-          ref={progressRef}
           onClick={handleProgressClick}
           className="w-full h-1 bg-white/30 rounded-full cursor-pointer mb-2.5"
         >
-          <div
-            className="h-full bg-white rounded-full"
-            style={{ width: `${progress}%` }}
-          />
+          <div className="h-full bg-white rounded-full" style={{ width: `${progress}%` }} />
         </div>
         <div className="flex items-center gap-2">
           <button onClick={toggle} className="text-white shrink-0">
@@ -115,8 +101,8 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-const AudioCard = forwardRef<HTMLAudioElement, { onTimeUpdate: (t: number) => void }>(
-  ({ onTimeUpdate }, ref) => (
+const AudioCard = forwardRef<HTMLAudioElement, { src: string; onTimeUpdate: (t: number) => void }>(
+  ({ src, onTimeUpdate }, ref) => (
     <div className="rounded-xl border bg-background px-3 py-2.5">
       <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">
         Audio
@@ -124,7 +110,8 @@ const AudioCard = forwardRef<HTMLAudioElement, { onTimeUpdate: (t: number) => vo
       <AudioPlayer>
         <AudioPlayerElement
           ref={ref}
-          src={SAMPLE_AUDIO_SRC}
+          src={src}
+          crossOrigin="anonymous"
           onTimeUpdate={(e) => onTimeUpdate(e.currentTarget.currentTime)}
         />
         <AudioPlayerControlBar>
@@ -141,16 +128,24 @@ const AudioCard = forwardRef<HTMLAudioElement, { onTimeUpdate: (t: number) => vo
 );
 AudioCard.displayName = "AudioCard";
 
-function TranscriptionCard({ currentTime, onSeek }: { currentTime: number; onSeek: (t: number) => void }) {
+function TranscriptionCard({
+  segments,
+  currentTime,
+  onSeek,
+}: {
+  segments: SegmentType[];
+  currentTime: number;
+  onSeek: (t: number) => void;
+}) {
   return (
     <div className="rounded-xl border bg-background px-3 py-2.5">
       <div className="flex items-center justify-between mb-2">
         <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
           Transcription
         </p>
-        <CopyButton text={SAMPLE_SEGMENTS.map((s) => s.text).join(" ")} />
+        <CopyButton text={segments.map((s) => s.text).join(" ")} />
       </div>
-      <Transcription segments={SAMPLE_SEGMENTS} currentTime={currentTime} onSeek={onSeek}>
+      <Transcription segments={segments} currentTime={currentTime} onSeek={onSeek}>
         {(segment, index) => (
           <TranscriptionSegment key={index} segment={segment} index={index} />
         )}
@@ -159,7 +154,15 @@ function TranscriptionCard({ currentTime, onSeek }: { currentTime: number; onSee
   );
 }
 
-function CaptionsCard() {
+function CaptionsCard({
+  title,
+  description,
+  tags,
+}: {
+  title: string;
+  description: string;
+  tags: string[];
+}) {
   return (
     <div className="rounded-xl border bg-background px-3 py-2.5 space-y-3">
       <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
@@ -168,26 +171,26 @@ function CaptionsCard() {
       <div className="space-y-1">
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-muted-foreground">Title</span>
-          <CopyButton text={SAMPLE_TITLE} />
+          <CopyButton text={title} />
         </div>
-        <p className="text-sm">{SAMPLE_TITLE}</p>
+        <p className="text-sm">{title}</p>
       </div>
       <div className="border-t" />
       <div className="space-y-1">
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-muted-foreground">Description</span>
-          <CopyButton text={SAMPLE_DESCRIPTION} />
+          <CopyButton text={description} />
         </div>
-        <p className="text-sm text-muted-foreground leading-relaxed">{SAMPLE_DESCRIPTION}</p>
+        <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
       </div>
       <div className="border-t" />
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-muted-foreground">Tags</span>
-          <CopyButton text={SAMPLE_TAGS} />
+          <CopyButton text={tags.join(" ")} />
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {SAMPLE_TAGS.split(" ").map((tag) => (
+          {tags.map((tag) => (
             <span
               key={tag}
               className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground"
@@ -233,6 +236,10 @@ export function AssistantBubble({ msg }: { msg: AssistantMessage }) {
     if (audioRef.current) audioRef.current.currentTime = t;
   }, []);
 
+  const hasAudio = !!msg.audioUrl;
+  const hasTranscription = !!msg.segments?.length;
+  const hasCaptions = !!msg.title;
+
   return (
     <div className="flex justify-start">
       <div className="w-full rounded-2xl bg-muted text-foreground px-4 py-3 text-sm">
@@ -240,11 +247,28 @@ export function AssistantBubble({ msg }: { msg: AssistantMessage }) {
           <ReasoningTrigger />
           <ReasoningContent>{msg.reasoningText}</ReasoningContent>
         </Reasoning>
-        {(msg.showAudio || msg.showTranscription || msg.showCaptions) && (
+        {msg.errorMessage && (
+          <p className="mt-2 text-sm text-destructive">{msg.errorMessage}</p>
+        )}
+        {(hasAudio || hasTranscription || hasCaptions) && (
           <div className="space-y-3 mt-1">
-            {msg.showAudio && <AudioCard ref={audioRef} onTimeUpdate={setCurrentTime} />}
-            {msg.showTranscription && <TranscriptionCard currentTime={currentTime} onSeek={handleSeek} />}
-            {msg.showCaptions && <CaptionsCard />}
+            {hasAudio && (
+              <AudioCard ref={audioRef} src={msg.audioUrl!} onTimeUpdate={setCurrentTime} />
+            )}
+            {hasTranscription && (
+              <TranscriptionCard
+                segments={msg.segments!}
+                currentTime={currentTime}
+                onSeek={handleSeek}
+              />
+            )}
+            {hasCaptions && (
+              <CaptionsCard
+                title={msg.title!}
+                description={msg.description!}
+                tags={msg.tags!}
+              />
+            )}
           </div>
         )}
       </div>
