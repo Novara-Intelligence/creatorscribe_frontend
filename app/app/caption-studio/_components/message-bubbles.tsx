@@ -112,6 +112,7 @@ const AudioCard = forwardRef<HTMLAudioElement, { src: string; onTimeUpdate: (t: 
           ref={ref}
           src={src}
           crossOrigin="anonymous"
+          preload="auto"
           onTimeUpdate={(e) => onTimeUpdate(e.currentTarget.currentTime)}
         />
         <AudioPlayerControlBar>
@@ -233,7 +234,10 @@ export function AssistantBubble({ msg }: { msg: AssistantMessage }) {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const handleSeek = useCallback((t: number) => {
-    if (audioRef.current) audioRef.current.currentTime = t;
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.currentTime = t;
+    audio.play();
   }, []);
 
   const hasAudio = !!msg.audioUrl;
