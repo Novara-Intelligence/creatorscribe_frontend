@@ -19,9 +19,9 @@ const TARGET_HEIGHT = 80;
 function computeRows(
   items: { aspectRatio: number }[],
   containerWidth: number
-): Array<{ indices: number[]; height: number; filled: boolean }> {
+): Array<{ indices: number[]; height: number }> {
   if (!containerWidth || items.length === 0) return [];
-  const rows: Array<{ indices: number[]; height: number; filled: boolean }> = [];
+  const rows: Array<{ indices: number[]; height: number }> = [];
   let rowIndices: number[] = [];
   let arSum = 0;
 
@@ -36,7 +36,7 @@ function computeRows(
       rowIndices.pop();
       arSum -= ar;
       const prevGaps = (rowIndices.length - 1) * GAP;
-      rows.push({ indices: [...rowIndices], height: (containerWidth - prevGaps) / arSum, filled: true });
+      rows.push({ indices: [...rowIndices], height: (containerWidth - prevGaps) / arSum });
       rowIndices = [i];
       arSum = ar;
     }
@@ -45,9 +45,8 @@ function computeRows(
   if (rowIndices.length > 0) {
     const gaps = (rowIndices.length - 1) * GAP;
     const naturalHeight = (containerWidth - gaps) / arSum;
-    const filled = naturalHeight <= TARGET_HEIGHT;
-    const height = filled ? naturalHeight : TARGET_HEIGHT;
-    rows.push({ indices: rowIndices, height, filled });
+    const height = Math.min(naturalHeight, TARGET_HEIGHT);
+    rows.push({ indices: rowIndices, height });
   }
 
   return rows;
@@ -137,10 +136,26 @@ function UploadedThumb({
     // Set a small ghost image synchronously so the drag preview isn't the full tile
     const ghost = document.createElement("div");
     ghost.style.cssText = "position:fixed;top:-1000px;width:80px;height:60px;overflow:hidden;border-radius:6px;";
-    const el = document.createElement(isVideo ? "video" : "img");
-    (el as HTMLImageElement).src = upload.file_url;
-    el.style.cssText = "width:100%;height:100%;object-fit:cover;";
-    ghost.appendChild(el);
+    if (isVideo) {
+      // Draw the already-rendered video frame to canvas — <video> tags can't render synchronously in a ghost
+      const canvas = document.createElement("canvas");
+      canvas.width = 80;
+      canvas.height = 60;
+      const ctx = canvas.getContext("2d");
+      const videoEl = (e.currentTarget as HTMLElement).querySelector("video");
+      if (ctx && videoEl) {
+        ctx.drawImage(videoEl, 0, 0, 80, 60);
+      } else if (ctx) {
+        ctx.fillStyle = "#1a1a1a";
+        ctx.fillRect(0, 0, 80, 60);
+      }
+      ghost.appendChild(canvas);
+    } else {
+      const el = document.createElement("img");
+      el.src = upload.file_url;
+      el.style.cssText = "width:100%;height:100%;object-fit:cover;";
+      ghost.appendChild(el);
+    }
     document.body.appendChild(ghost);
     e.dataTransfer.setDragImage(ghost, 40, 30);
     setTimeout(() => document.body.removeChild(ghost), 0);
@@ -237,14 +252,10 @@ interface PendingFile {
 
 function PendingUploadThumb({
   pending,
-  height,
-  aspectRatio,
   style,
   onAspectRatio,
 }: {
   pending: PendingFile;
-  height: number;
-  aspectRatio: number;
   style: React.CSSProperties;
   onAspectRatio: (r: number) => void;
 }) {
@@ -305,9 +316,9 @@ function PendingUploadThumb({
 }
 
 export function UploadPanel() {
-  const { activePanel, closePanel, addPendingFiles, uploadRefreshKey } = usePanel();
+  const { activePanel, addPendingFiles, uploadRefreshKey } = usePanel();
   const inputRef = useRef<HTMLInputElement>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const open = activePanel === "uploads";
   const [draggingOver, setDraggingOver] = useState(false);
   const [search, setSearch] = useState("");
@@ -328,13 +339,15 @@ export function UploadPanel() {
   }, [uploadRefreshKey, fetchUploads]);
 
   useEffect(() => {
-    if (!gridRef.current) return;
+    const el = scrollRef.current;
+    if (!el) return;
     const observer = new ResizeObserver((entries) => {
-      setContainerWidth(entries[0].contentRect.width);
+      // subtract horizontal padding (px-3 = 12px each side)
+      setContainerWidth(entries[0].contentRect.width - 24);
     });
-    observer.observe(gridRef.current);
+    observer.observe(el);
     return () => observer.disconnect();
-  }, [open]);
+  }, []);
 
   const handleAspectRatio = useCallback((key: string, ratio: number) => {
     setAspectRatios((prev) => ({ ...prev, [key]: ratio }));
@@ -362,10 +375,9 @@ export function UploadPanel() {
           );
         });
         setPendingFiles((prev) => prev.filter((e) => e.id !== id));
+        await fetchUploads();
       })
     );
-
-    await fetchUploads();
   };
 
   const filteredUploads = uploads.filter((u) =>
@@ -453,7 +465,7 @@ export function UploadPanel() {
           </div>
 
           {/* Scrollable file grid */}
-          <div className="flex-1 overflow-y-auto scrollbar-hide px-3 pb-3 flex flex-col gap-1.5">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide px-3 pb-3 flex flex-col gap-1.5">
             {isFetching && uploads.length === 0 && pendingFiles.length === 0 ? (
               <div className="flex flex-col gap-1 pt-1">
                 <div className="flex gap-1">
@@ -486,20 +498,16 @@ export function UploadPanel() {
                     {filteredUploads.length + pendingFiles.length} file{filteredUploads.length + pendingFiles.length !== 1 ? "s" : ""}
                   </span>
                 </div>
-                <div ref={gridRef} className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1">
                   {rows.map((row, ri) => (
                     <div key={ri} className="flex gap-1">
                       {row.indices.map((idx) => {
                         const item = items[idx];
-                        const style = row.filled
-                          ? { flex: item.aspectRatio, height: row.height, minWidth: 0 }
-                          : { width: item.aspectRatio * row.height, height: row.height, flexShrink: 0 };
+                        const style = { flex: item.aspectRatio, height: row.height, minWidth: 0 };
                         return item.kind === "pending" ? (
                           <PendingUploadThumb
                             key={item.key}
                             pending={item.pending}
-                            height={row.height}
-                            aspectRatio={item.aspectRatio}
                             style={style}
                             onAspectRatio={(r) => handleAspectRatio(item.key, r)}
                           />
