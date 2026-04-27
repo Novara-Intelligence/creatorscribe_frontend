@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
 import { MdErrorOutline } from "react-icons/md";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -17,11 +17,22 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { useAuth } from "@/hooks/useAuth";
 import { APP_ROUTES } from "@/constants/routes";
 import { APP_CONFIG, FACEBOOK_APP_ID } from "@/constants/config";
+import { toast } from "sonner";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isSignUp = pathname === APP_ROUTES.AUTH.SIGN_UP;
+
+  const deletedToastShown = useRef(false);
+  useEffect(() => {
+    if (searchParams.get("deleted") === "true" && !deletedToastShown.current) {
+      deletedToastShown.current = true;
+      toast.success("Your account has been deleted.");
+      router.replace(APP_ROUTES.AUTH.SIGN_IN);
+    }
+  }, [searchParams, router]);
 
   const { googleLogin, facebookLogin, login, register, isLoading, error, clearError } = useAuth();
 

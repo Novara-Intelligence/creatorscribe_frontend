@@ -233,7 +233,7 @@ export default function ProfilePage() {
         onConfirm={async () => {
           await userService.deleteAccount();
           await logout();
-          router.push("/auth/sign-in");
+          router.push("/auth/sign-in?deleted=true");
         }}
         title="Delete Entire Account"
         description="Permanently delete your account across all workspaces. This cannot be undone."
