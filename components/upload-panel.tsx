@@ -328,6 +328,7 @@ export function UploadPanel() {
 
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [previewUpload, setPreviewUpload] = useState<Upload | null>(null);
+  const isDraggingFromInside = useRef(false);
   const { uploads, isUploading, isFetching, uploadFile, fetchUploads } = useUpload();
 
   useEffect(() => {
@@ -411,10 +412,12 @@ export function UploadPanel() {
     <>
       <aside
         className={`relative flex flex-col border-r bg-background transition-all duration-200 ease-in-out overflow-hidden shrink-0 h-full ${open ? "w-80 opacity-100" : "w-0 opacity-0"}`}
-        onDragEnter={(e) => { e.preventDefault(); dragCounter.current++; if (dragCounter.current === 1) setDraggingOver(true); }}
-        onDragLeave={() => { dragCounter.current--; if (dragCounter.current === 0) setDraggingOver(false); }}
+        onDragStart={() => { isDraggingFromInside.current = true; }}
+        onDragEnd={() => { isDraggingFromInside.current = false; dragCounter.current = 0; setDraggingOver(false); }}
+        onDragEnter={(e) => { e.preventDefault(); if (isDraggingFromInside.current) return; dragCounter.current++; if (dragCounter.current === 1) setDraggingOver(true); }}
+        onDragLeave={() => { if (isDraggingFromInside.current) return; dragCounter.current--; if (dragCounter.current === 0) setDraggingOver(false); }}
         onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => { e.preventDefault(); dragCounter.current = 0; setDraggingOver(false); handleFiles(Array.from(e.dataTransfer.files)); }}
+        onDrop={(e) => { e.preventDefault(); dragCounter.current = 0; setDraggingOver(false); if (!isDraggingFromInside.current) handleFiles(Array.from(e.dataTransfer.files)); }}
       >
         {draggingOver && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background/90 backdrop-blur-sm border-1 m-2 rounded-lg border-dashed border-primary pointer-events-none">
