@@ -17,6 +17,9 @@ import { Input } from "@/components/ui/input";
 import { DialogDescription } from "@/components/ui/dialog";
 import { useUser } from "@/hooks/useUser";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
+import userService from "@/services/user.service";
 
 function SettingRow({
   label,
@@ -141,6 +144,8 @@ export default function ProfilePage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const { profile, fetchProfile, updateProfile } = useUser();
+  const { logout } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     fetchProfile();
@@ -226,7 +231,9 @@ export default function ProfilePage() {
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
         onConfirm={async () => {
-          toast.success("Account deleted");
+          await userService.deleteAccount();
+          await logout();
+          router.push("/auth/sign-in");
         }}
         title="Delete Entire Account"
         description="Permanently delete your account across all workspaces. This cannot be undone."

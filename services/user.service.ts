@@ -23,6 +23,11 @@ const userService = {
     });
     return data;
   },
+
+  async deleteAccount(): Promise<{ success: boolean; message: string }> {
+    const { data } = await axiosInstance.delete("auth/delete-account");
+    return data;
+  },
 };
 
 export default userService;
